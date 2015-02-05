@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+var debug = require('debug')('eFins');
+var app = require('../app');
+
+app.set('port', process.env.PORT || 3000);
+
+var server = app.listen(app.get('port'), function() {
+  debug('Express server listening on port ' + server.address().port);
+});
+
+process.on('message', function(msg) {
+  if (msg == 'shutdown') {
+    // Your process is going to be reloaded
+    // You have to close all database/socket.io/* connections
+
+    console.log('Closing all connections...');
+    server.close();
+
+    // You will have 4000ms to close all connections before
+    // the reload mechanism will try to do its job
+
+    setTimeout(function() {
+      console.log('Finished closing connections');
+      // This timeout means that all connections have been closed
+      // Now we can exit to let the reload mechanism do its job
+      process.exit(0);
+    }, 1500);
+  }
+});
