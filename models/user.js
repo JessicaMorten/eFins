@@ -32,6 +32,11 @@ module.exports = function(sequelize, DataTypes) {
       validate: {
         notEmpty: true
       }
+    },
+    approved: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   }, {
     classMethods: {
@@ -42,11 +47,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     instanceMethods: {
       setPassword: function setPassword(password, done) {
-        var set = this.setDataValue;
-        bcrypt.hash(password, 12, function(err, hash) {
-          set('hash', hash);
+        bcrypt.hash(password, 12, (function(err, hash) {
+          this.setDataValue('hash', hash);
           if (done) { done(err, hash); };
-        });
+        }).bind(this));
       },
       verifyPassword: function verifyPassword(password, done) {
         bcrypt.compare(password, this.hash, done);

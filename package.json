@@ -8,7 +8,8 @@
     "stop": "node_modules/pm2/bin/pm2 stop bin/eFins --watch 0",
     "reload": "node_modules/pm2/bin/pm2 gracefulReload bin/eFins",
     "monitor": "node_modules/pm2/bin/pm2 monitor",
-    "logs": "node_modules/pm2/bin/pm2 logs"
+    "logs": "node_modules/pm2/bin/pm2 logs",
+    "test": "NODE_ENV=test ./testRunner.js"
   },
   "dependencies": {
     "bcrypt": "^0.8.1",
@@ -22,7 +23,7 @@
     "pg": "^4.2.0",
     "pg-hstore": "^2.3.1",
     "pm2": "^0.12.4",
-    "sequelize": "^2.0.0-rc8",
+    "sequelize": "^2.0.3",
     "sequelize-cli": "^1.1.0",
     "serve-favicon": "~2.1.3"
   }

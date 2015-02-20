@@ -4,8 +4,18 @@ var fs        = require("fs");
 var path      = require("path");
 var Sequelize = require("sequelize");
 var basename  = path.basename(module.filename);
-var sequelize = new Sequelize(process.env.EFINS_DB || 
-  "postgres://localhost:5432/efins");
+
+var pgConn;
+
+if (process.env.NODE_ENV == 'test') {
+  pgConn = process.env.EFINS_TEST_DB || 
+    "postgres://localhost:5432/efins-test"
+} else {
+  pgConn = process.env.EFINS_DB || 
+    "postgres://localhost:5432/efins"
+}
+
+var sequelize = new Sequelize(pgConn);
 var db        = {};
 
 fs
