@@ -2,13 +2,13 @@
 var url = require('url');
 
 var connectionString = process.env.EFINS_DB || 
-  "postgress://localhost:5432/efins";
+  "postgres://localhost:5432/efins_development";
 
 var opts = url.parse(connectionString);
 
 var config = {
-  "username": opts.auth ? opts.auth.split(':')[0] : 'postgres',
-  "password": opts.auth ? opts.auth.split(':')[1] : null,
+  "username": opts.auth ? opts.auth.split(':')[0] : 'efins',
+  "password": opts.auth ? opts.auth.split(':')[1] : '@efins!%',
   "database": opts.path.split('/')[1],
   "host": opts.host.split(':')[0],
   "port": opts.host.split(':')[1],
