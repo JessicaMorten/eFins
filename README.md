@@ -9,7 +9,7 @@ npm install
 psql
 > create database efins;
 ... be sure to use setting relevant to your install!!
-echo "export EFINS_DB=postgres://cburt@localhost:5432/efins" > ~/.profile
+echo "export EFINS_DB=postgres://cburt@localhost:5432/efins" >> ~/.profile
 npm install -g sequelize # easier to use on command line
 sequelize db:migrate
 npm run-script devserver
