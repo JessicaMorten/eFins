@@ -9,7 +9,6 @@ exports.canCreateAndSave = function(test) {
   });
 
   test.ok(!user.approved, "user should not be approved yet.");
-
   user.setPassword('password', function(err) {
     if (err) { return test.done(err); }
     test.ok(user.hash !== 'password',
@@ -21,7 +20,7 @@ exports.canCreateAndSave = function(test) {
 
 exports.validatesAttributes = function(test) {
 
-  user = User.build({
+  var user = User.build({
     email: 'blah',
     name: ''
   });
