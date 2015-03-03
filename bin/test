@@ -1,0 +1,23 @@
+rm -rf coverage
+NODE_ENV=test \
+PORT=3003 \
+EFINS_HOSTNAME=localhost:3003 \
+EFINS_ADMIN_EMAIL=admin@efins.org \
+pm2 start bin/eFins -i 1 -f -s --name \"test-eFins\"
+NODE_ENV=test \
+PORT=3003 \
+EFINS_HOSTNAME=localhost:3003 \
+EFINS_ADMIN_EMAIL=admin@efins.org \
+node_modules/istanbul/lib/cli.js cover --print none ./testRunner.js
+curl -s http://localhost:3003/coverage/download > cov.zip
+rm -rf cov
+unzip -q cov.zip -d cov
+rm -f cov.zip
+bin/mergeCoverages
+mv coverage/coverage.json .
+rm -rf coverage
+node_modules/istanbul/lib/cli.js report html
+rm -rf cov
+rm -f coverage.json
+pm2 stop -s \"test-eFins\"
+pm2 delete -s \"test-eFins\"

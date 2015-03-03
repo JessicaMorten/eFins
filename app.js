@@ -1,23 +1,35 @@
+"use strict";
+var im = require('istanbul-middleware');
+
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var Models = require('./models');
 var sequelize = require('sequelize');
+
+if (process.env.NODE_ENV === 'test') {
+    console.log('Hook loader for coverage - ensure this is not production!');
+    im.hookLoader(__dirname);
+}
+
+var Models = require('./models');
 
 var routes = require('./routes/index');
 var auth = require('./routes/auth');
 
+var absUrl = require('./absoluteUrl.js');
+
 // Authorization
 var passport = require('passport');
-BearerStrategy = require('passport-http-bearer').Strategy;
+var BearerStrategy = require('passport-http-bearer').Strategy;
 var jwt = require('jsonwebtoken');
 
 if (!process.env.EFINS_SECRET) {
   console.error('EFINS_SECRET not set. This is INSECURE!');
 }
+
 var SECRET = process.env.EFINS_SECRET || 'insecure';
 
 passport.use('token', new BearerStrategy(
@@ -69,6 +81,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/auth', auth);
+if (process.env.NODE_ENV === 'test') {
+    //enable coverage endpoints under /coverage
+    app.use('/coverage', im.createHandler());
+}
+
 app.use(passport.authorize('token', {session: false}));
 app.use('/', routes);
 
@@ -85,9 +102,11 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
+    console.log('handled error');
     if (err instanceof sequelize.ValidationError) {
       err.message = "Validation Error: ";
-      err.message += err.errors.map(function(e){return e.message;}).join(', ');
+      err.message += err.errors.map(
+        function(e){return e.message;}).join(', ');
     }
     res.status(err.status || 500);
     res.render('error', {
@@ -100,9 +119,11 @@ if (app.get('env') === 'development') {
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
+  console.log('handled error');
   if (err instanceof sequelize.ValidationError) {
     err.message = "Validation Error: ";
-    err.message += err.errors.map(function(e){return e.message;}).join(', ');
+    err.message += err.errors.map(
+      function(e){return e.message;}).join(', ');
   }
   res.status(err.status || 500);
   res.render('error', {
@@ -111,5 +132,11 @@ app.use(function(err, req, res, next) {
   });
 });
 
+sequelize.Promise.onPossiblyUnhandledRejection(function(err, promise) {
+  console.error(err.stack);
+  server.close(function() {
+    process.exit(1);
+  });
+});
 
 module.exports = app;

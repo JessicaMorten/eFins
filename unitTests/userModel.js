@@ -2,7 +2,6 @@ var Models = require('../models');
 var User = Models.User;
 
 exports.canCreateAndSave = function(test) {
-
   var user = User.build({
     email: 'chad@underbluewaters.net',
     name: 'Chad Burt'
@@ -10,10 +9,14 @@ exports.canCreateAndSave = function(test) {
 
   test.ok(!user.approved, "user should not be approved yet.");
   user.setPassword('password', function(err) {
-    if (err) { return test.done(err); }
+    test.ifError(err);
     test.ok(user.hash !== 'password',
       'Whoa.. password should not be cleartext');
-    user.save({logging: false}).done(test.done);
+    user.verifyPassword("password", function(err, valid) {
+      test.ifError(err);
+      test.ok(valid);
+      user.save().done(test.done);
+    });
   });
 
 };
@@ -26,7 +29,7 @@ exports.validatesAttributes = function(test) {
   });
 
   user.validate().done(function(err, validator) {
-    if (err) { return test.done(err); }
+    test.ifError(err);
     test.ok(validator.errors instanceof Array,
       "Should be validation errors");
 
@@ -53,3 +56,26 @@ exports.validatesAttributes = function(test) {
   });
 
 };
+
+
+exports.dontResendConfirmationEmailUnlessApproved = function(test) {
+  var user = User.build({
+    email: 'test2@efins.org',
+    name: 'Test Burt'
+  });
+  user.resendConfirmationEmail(function(err, email) {
+    test.ok(err, "Should not allow without approval of user");
+    test.done();
+  });
+}
+
+exports.dontAllowDirectSettingOfPasswordHash = function(test) {
+  test.throws(function() {
+    var user = User.build({
+      email: 'test2@efins.org',
+      name: 'Test Burt',
+      hash: 'cleartext-password'
+    });
+  }, Error, "Should not be able to set cleartext password");
+  test.done();
+}

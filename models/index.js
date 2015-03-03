@@ -7,6 +7,7 @@ var basename  = path.basename(module.filename);
 
 var pgConn;
 
+/* istanbul ignore else */
 if (process.env.NODE_ENV == 'test') {
   pgConn = process.env.EFINS_TEST_DB || 
     "postgres://localhost:5432/efins-test"
@@ -15,7 +16,7 @@ if (process.env.NODE_ENV == 'test') {
     "postgres://localhost:5432/efins"
 }
 
-var sequelize = new Sequelize(pgConn);
+var sequelize = new Sequelize(pgConn, {logging: false});
 var db        = {};
 
 fs
@@ -29,6 +30,7 @@ fs
   });
 
 Object.keys(db).forEach(function(modelName) {
+  /* istanbul ignore next */
   if ("associate" in db[modelName]) {
     db[modelName].associate(db);
   }

@@ -1,5 +1,12 @@
 "use strict";
-var bcrypt = require("bcrypt");
+var bcrypt = require('bcrypt');
+var crypto = require('crypto');
+var absUrl = require('../absoluteUrl.js');
+var emailer = require('../email.js');
+
+var randomToken = function() {
+  return crypto.randomBytes(20).toString('hex');
+}
 
 module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define("User", {
@@ -37,27 +44,123 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    secretToken: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      defaultValue: randomToken
+    },
+    emailConfirmed: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   }, {
     classMethods: {
       // cb - this was auto-generated. Not sure of it's utility
       associate: function(models) {
         // associations can be defined here
+      },
+      register: function(opts, next) {
+        if (!opts.password) {
+          var err = new Error("Password Required");
+          err.status = 400;
+          next(err);
+        } else {
+          var user = this.build({
+            email: opts.email,
+            name: opts.name
+          });
+          user.setPassword(opts.password, function(err) {
+            /* istanbul ignore if */
+            if (err) {
+              next(err);
+            } else {
+              user.save({logging: false}).done(function(err, user) {
+                /* istanbul ignore if */
+                if (err) {
+                  next(err);
+                } else {
+                  notifyAdminsOfNewUser(user, function(err){
+                    next(err, user);
+                  });
+                }
+              })
+            }
+          });
+        }
       }
     },
     instanceMethods: {
       setPassword: function setPassword(password, done) {
         bcrypt.hash(password, 12, (function(err, hash) {
           this.setDataValue('hash', hash);
-          if (done) { done(err, hash); };
+          /* istanbul ignore else */
+          if (done) { 
+            done(err, hash); 
+          };
         }).bind(this));
       },
       verifyPassword: function verifyPassword(password, done) {
         bcrypt.compare(password, this.hash, done);
-      }
+      },
+      approve: function approveUser(done) {
+        this.approved = true;
+        this.save().done(function(err, user) {
+          /* istanbul ignore if */
+          if (err) {
+            next(err);
+          } else {
+            sendEmailConfirmationToUser(user, done);
+          }
+        });
+      },
+      resendConfirmationEmail: function resendConfirmationEmail(next) {
+        if (this.approved) {
+          sendEmailConfirmationToUser(this, next);
+        } else {
+          next(new Error("User not yet approved."));
+        }
+      },
+      isAllowed: function userIsAllowed() {
+        return this.approved && this.emailConfirmed;
+      } 
     }
   }, {
     paranoid: true
   });
   return User;
 };
+
+function notifyAdminsOfNewUser(user, next) {
+  emailer.sendTemplates({
+    to: emailer.adminEmail,
+    subject: "New eFins user registration - " + user.name,
+    html: 'email/newUserNotification',
+    text: 'email/newUserNotificationText',
+    context: {
+      approve: absUrl("/auth/approve/", user.secretToken),
+      deny: absUrl("/auth/deny/", user.secretToken),
+      name: user.name,
+      email: user.email
+    }
+  }, function(err, json) {
+    next(err, user);
+  });
+}
+
+function sendEmailConfirmationToUser(user, next) {
+  emailer.sendTemplates({
+    to: user.email,
+    subject: "Confirm your eFins account",
+    html: 'email/confirmEmail',
+    text: 'email/confirmEmailText',
+    context: {
+      confirm: absUrl("/auth/emailConfirmation/", user.secretToken),
+      name: user.name
+    }
+  }, function(err, json) {
+    next(err, user);
+  });
+}

@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+var istanbul = require('istanbul');
+var fs = require('fs');
+var collector = new istanbul.Collector();
+var original = "coverage/coverage.json";
+collector.add(JSON.parse(fs.readFileSync(original, 'utf8')));
+collector.add(JSON.parse(fs.readFileSync("cov/coverage.json", 'utf8')));
+var finalCoverage = collector.getFinalCoverage();
+fs.writeFileSync(original, JSON.stringify(finalCoverage));
+console.log('Coverage information in coverage/index.html');

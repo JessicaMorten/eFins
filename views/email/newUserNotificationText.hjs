@@ -1,0 +1,12 @@
+A new user has registered for eFins and requires approval.
+
+{{name}}
+{{email}}
+
+Would you like to approve:
+{{approve}}
+
+Or deny:
+{{deny}}
+
+This request?
