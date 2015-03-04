@@ -21,6 +21,26 @@ function userIsAllowed(email, next) {
   });
 }
 
+function createUser(opts, next) {
+  var password = opts.password;
+  delete opts.password;
+  var user = User.build(opts);
+  user.setPassword(password, function(err){
+    /* istanbul ignore if */
+    if (err) {
+      next(err)
+    } else {
+      user.save().done(function(err) {
+        next(err, user);
+      })      
+    }
+  });
+}
+
+exports.setUp = function(done) {
+  require('../models').sequelize.sync({force: true}).done(done);
+}
+
 exports.successfulUserRegistrationWorkflow = function(test) {
   request.post(absUrl("/auth/register"), {
     form: {
@@ -198,8 +218,222 @@ exports.dontDenyAlreadyAllowedUsers = function(test) {
   });
 }
 
-exports.setUp = function(done) {
-  require('../models').sequelize.sync({force: true}).done(done);
+exports.requireTokenForNearlyEverything = function(test) {
+  request.get(absUrl("/vessels"), function(err, response, body) {
+    test.ifError(err);
+    test.equals(response.statusCode, 401, "Not authorized");
+    test.done();
+  });
 }
 
+exports.getToken = {
+  getToken: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      user.save().done(function(err) {
+        test.ifError(err);
+        request.post(absUrl("/auth/getToken"), {form: {email: "test@example.com", password: "password"}}, function(err, response, body) {
+          test.ifError(err);
+          test.equals(response.statusCode, 200);
+          test.ok(!!response.headers.authorization);
+          test.equals(response.headers.authorization.split(' ')[0], "Bearer");
+          var authorized = request.defaults({
+            headers: {
+              Authorization: response.headers.authorization
+            }
+          });
+          authorized.get(absUrl("/"), function(err, res, body) {
+            test.ifError(err);
+            test.equals(res.statusCode, 200);
+            test.done();
+          });
+        });
+      });
+    });
+  },
 
+  wrongPassword: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      request.post(absUrl("/auth/getToken"), {form: {email: "test@example.com", password: "psswrd"}}, function(err, response, body) {
+        test.ifError(err);
+        test.equals(response.statusCode, 401);
+        test.ok(!response.headers.authorization);
+        test.done();
+      });
+    });  
+  },
+
+  missingParams: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      request.post(absUrl("/auth/getToken"), {form: {}}, function(err, response, body) {
+        test.ifError(err);
+        test.equals(response.statusCode, 400);
+        test.ok(!response.headers.authorization);
+        test.done();
+      });
+    });  
+  },
+
+  nonExistantUser: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      request.post(absUrl("/auth/getToken"), {form: {email: 'someone@example.com', password: 'password'}}, function(err, response, body) {
+        test.ifError(err);
+        test.equals(response.statusCode, 404);
+        test.ok(!response.headers.authorization);
+        test.done();
+      });
+    });  
+  },
+
+  unapproved: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: false,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      request.post(absUrl("/auth/getToken"), {form: {email: "test@example.com", password: "password"}}, function(err, response, body) {
+        test.ifError(err);
+        test.equals(response.statusCode, 403);
+        test.ok(!response.headers.authorization);
+        test.done();
+      });
+    });  
+  },
+
+  withoutEmailConfirmation: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: false,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      request.post(absUrl("/auth/getToken"), {form: {email: "test@example.com", password: "password"}}, function(err, response, body) {
+        test.ifError(err);
+        test.equals(response.statusCode, 403);
+        test.ok(!response.headers.authorization);
+        test.done();
+      });
+    });  
+  }
+}
+
+function authorize(opts, next) {
+  createUser(opts, function(err, user) {
+    /* istanbul ignore if */
+    if (err) {
+      next(err);
+    } else {
+      user.save().done(function(err) {
+        /* istanbul ignore if */
+        if (err) {
+          next(err);
+        } else {
+          var form = {
+            form: {
+              email: "test@example.com",
+              password: "password"
+            }
+          };
+          request.post(absUrl("/auth/getToken"), form, function(err, res) {
+            /* istanbul ignore if */
+            if (err) {
+              next(err);
+            } else {
+              /* istanbul ignore if */
+              if (res.statusCode !== 200) {
+                next(new Error("Could not get token"));
+              } else {
+                next(null, user, request.defaults({
+                  headers: {
+                    Authorization: res.headers.authorization
+                  }
+                }));
+              }
+            }
+          });          
+        }
+      });
+    }
+  });
+}
+
+exports.expireToken = {
+  successfully: function(test) {
+    authorize({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user, authorized) {
+      test.ifError(err);
+      authorized.get(absUrl("/"), function(err, res, body) {
+        test.ifError(err);
+        test.equals(res.statusCode, 200);
+        authorized.post(absUrl("/auth/expireToken"), function(err, res, b) {
+          test.ifError(err);
+          test.equals(res.statusCode, 200);
+          authorized.get(absUrl("/"), function(err, res, body) {
+            test.ifError(err);
+            test.equals(res.statusCode, 401);
+            test.done()
+          });
+        });
+      });
+    });
+  },
+
+  noToken: function(test) {
+    request.post(absUrl("/auth/expireToken"), function(err, res) {
+      test.ifError(err);
+      test.equals(res.statusCode, 401);
+      test.done();
+    });
+  },
+
+  nonExistentToken: function(test) {
+    var authorized = request.defaults({
+      headers: {
+        Authorization: "Bearer 12345"
+      }
+    });
+    request.post(absUrl("/auth/expireToken"), function(err, res) {
+      test.ifError(err);
+      test.equals(res.statusCode, 401);
+      test.done();
+    });
+  }
+
+}

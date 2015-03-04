@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var User = require('../models').User;
+var Session = require('../models').Session;
 var absUrl = require('../absoluteUrl');
 /**
 POST /register
@@ -126,39 +127,62 @@ router.get('/emailConfirmation/:token', function(req, res, next) {
   });  
 });
 
-// router.post('/login', function(req, res, next) {
-//   if (!req.body.email) {
-//     next(new Error("Email Required"));
-//   } else {
-//     User.find({where: { email: req.body.email }}).done(function(err, user) {
-//       if (err) {
-//         next(err);
-//       } else {
-//         if (user) {
-//           user.verifyPassword(req.body.password, function(err, passes) {
-//             if (passes) {
-//               if (user.approved) {
-//                 res.send("Accepted!");
-//               } else {
-//                 err = new Error("Account not yet approved.");
-//                 err.status = 403;
-//                 next(err);
-//               }
-//             } else {
-//               err = new Error("Incorrect password");
-//               err.status = 401;
-//               next(err);
-//             }
-//           });
-//         } else {
-//           err = new Error("User does not exist");
-//           err.status = 401;
-//           next(err);
-//         }
-//       }
-//     });
-//   }
-// });
+router.post('/getToken', function(req, res, next) {
+  if (!req.body.email) {
+    var err = new Error("Email Required");
+    err.status = 400;
+    next(err);
+  } else {
+    User.find({where: { email: req.body.email }}).done(function(err, user) {
+      if (err) {
+        next(err);
+      } else {
+        if (user) {
+          user.verifyPassword(req.body.password, function(err, passes) {
+            if (passes) {
+              if (user.isAllowed()) {
+                Session.createForUser(user, function(err, session) {
+                  if (err) {
+                    next(err);
+                  } else {
+                    res.set('Authorization', session.toString());
+                    res.send(JSON.stringify(session));
+                  }
+                });
+              } else {
+                err = new Error("Account not yet approved.");
+                err.status = 403;
+                next(err);
+              }
+            } else {
+              err = new Error("Incorrect password");
+              err.status = 401;
+              next(err);
+            }
+          });
+        } else {
+          err = new Error("User does not exist");
+          err.status = 404;
+          next(err);
+        }
+      }
+    });
+  }
+});
+
+var check = passport.authorize('token', {session: false});
+
+router.post('/expireToken', check, function(req, res, next) {
+  Session.destroy({where: {token: req.account.token}})
+    .done(function(err, affected) {
+      console.log('err', affected);
+      if (err) {
+        next(done);
+      } else {
+        res.send("Deleted");
+      }
+    });
+});
 
 // router.post('/logout', function(req, res) {
 //   res.send('respond with a resource');

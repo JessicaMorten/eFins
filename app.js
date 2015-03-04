@@ -18,7 +18,7 @@ var Models = require('./models');
 
 var routes = require('./routes/index');
 var auth = require('./routes/auth');
-
+      
 var absUrl = require('./absoluteUrl.js');
 
 // Authorization
@@ -26,45 +26,33 @@ var passport = require('passport');
 var BearerStrategy = require('passport-http-bearer').Strategy;
 var jwt = require('jsonwebtoken');
 
-if (!process.env.EFINS_SECRET) {
-  console.error('EFINS_SECRET not set. This is INSECURE!');
-}
-
-var SECRET = process.env.EFINS_SECRET || 'insecure';
-
 passport.use('token', new BearerStrategy(
   function(token, done) {
-    jwt.verify(token, SECRET, function(err, decoded) {
+    jwt.verify(token, Models.Session.SECRET, function(err, decoded) {
       if (err) {
         done(null, false);
       } else {
-        if (decoded.authorized) {
-          done(null, decoded);
-        } else {
-          done(null, false);
-        }
+        Models.Session.findOne({where: {token: token}})
+        .done(function(err, session) {
+          if (err) {
+            next(err);
+          } else {
+            if (session) {
+              if (decoded.authorized) {
+                decoded.token = token;
+                done(null, decoded);
+              } else {
+                done(null, false);
+              }
+            } else {
+              done(null, false);
+            }
+          }
+        });
       }
     });
   }
 ));
-
-passport.use('w/user', new BearerStrategy(
-  function(token, done) {
-    jwt.verify(token, SECRET, function(err, decoded) {
-      if (err) {
-        done(null, false);
-      } else {
-        var userId = decoded.userId;
-        if (userId) {
-          Models.User.find(userId).done(done);
-        } else {
-          done(new Error('No userId present in token'));
-        }
-      }
-    });
-  }
-));
-
 
 var app = express();
 

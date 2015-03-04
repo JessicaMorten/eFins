@@ -8,7 +8,7 @@ NODE_ENV=test \
 PORT=3003 \
 EFINS_HOSTNAME=localhost:3003 \
 EFINS_ADMIN_EMAIL=admin@efins.org \
-node_modules/istanbul/lib/cli.js cover --print none ./testRunner.js
+node_modules/istanbul/lib/cli.js cover --print none ./testRunner.js $1
 curl -s http://localhost:3003/coverage/download > cov.zip
 rm -rf cov
 unzip -q cov.zip -d cov
