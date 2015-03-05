@@ -10,10 +10,11 @@ if (files.length === 0) {
   files = ['unitTests'];
 }
 
-if (process.env.CIRCLECI) {
+if (process.env.JUNIT) {
   var reporter = require('nodeunit').reporters.default;
 } else {
   var reporter = require('nodeunit').reporters.junit;
+  console.log('Using junit reporter');
 }
 
 var Models = require('./models');
