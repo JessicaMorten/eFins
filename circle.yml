@@ -7,4 +7,4 @@ machine:
     - postgresql
   environment:
     EFINS_TEST_DB: postgres://ubuntu@localhost:5432/circle_test
-    JUNIT: true
+    EFINS_TEST_REPORTER: junit

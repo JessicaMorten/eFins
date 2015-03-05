@@ -10,11 +10,13 @@ if (files.length === 0) {
   files = ['unitTests'];
 }
 
-if (process.env.JUNIT) {
-  var reporter = require('nodeunit').reporters.default;
-} else {
-  var reporter = require('nodeunit').reporters.junit;
-  console.log('Using junit reporter');
+process.env.EFINS_TEST_REPORTER = process.env.EFINS_TEST_REPORTER || "default";
+console.log('using', process.env.EFINS_TEST_REPORTER, 'reporter');
+var reporter = require('nodeunit').reporters[process.env.EFINS_TEST_REPORTER];
+
+var opts = null;
+if (process.env.EFINS_TEST_REPORTER === 'junit') {
+  opts = {output: "./test-results"};
 }
 
 var Models = require('./models');
@@ -22,7 +24,7 @@ var Models = require('./models');
 Models.sequelize.sync({force: true})
   .done(function() {
     process.chdir(__dirname);
-    reporter.run(files, {output: "./test-results"}, function() {
+    reporter.run(files, opts, function() {
       Models.sequelize.close();
     });
   });
