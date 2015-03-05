@@ -68,6 +68,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.enable('trust proxy');
+
 app.use('/auth', auth);
 if (process.env.NODE_ENV === 'test') {
     //enable coverage endpoints under /coverage

@@ -2,9 +2,26 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
+var limit = require('express-better-ratelimit');
 var User = require('../models').User;
 var Session = require('../models').Session;
 var absUrl = require('../absoluteUrl');
+
+// default options shown below 
+if (process.env.NODE_ENV === "test") {
+  var limiter = limit({
+    duration: 30000, //30 seconds 
+    max: 50000
+    //blackList: ['127.0.0.1'] 
+  });
+} else {
+  var limiter = limit({
+    duration: 30000, //30 seconds 
+    max: 5 // 5 * 4 = 20 (4 nodes in cluster)
+    //blackList: ['127.0.0.1'] 
+  });
+}
+
 /**
 POST /register
 Must have the following attributes:
@@ -12,7 +29,7 @@ Must have the following attributes:
   * email
   * password
 */
-router.post('/register', function(req, res, next) {
+router.post('/register', limiter, function(req, res, next) {
   User.register(req.body, function(err, user) {
     if (err) {
       next(err);
@@ -25,7 +42,7 @@ router.post('/register', function(req, res, next) {
 
 // Yep, these should be POST but they are going to be action links
 // embedded in an email so they must be GET
-router.get('/approve/:token', function(req, res, next) {
+router.get('/approve/:token', limiter, function(req, res, next) {
   var q = {where: {secretToken: req.params.token}};
   User.find(q).done(function(err, user) {
     /* istanbul ignore if */
@@ -69,7 +86,7 @@ router.get('/approve/:token', function(req, res, next) {
   });
 });
 
-router.get('/deny/:token', function(req, res, next) {
+router.get('/deny/:token', limiter, function(req, res, next) {
   var q = {where: {secretToken: req.params.token}};
   User.find(q).done(function(err, user) {
     /* istanbul ignore if */
@@ -101,7 +118,7 @@ router.get('/deny/:token', function(req, res, next) {
   });
 });
 
-router.get('/emailConfirmation/:token', function(req, res, next) {
+router.get('/emailConfirmation/:token', limiter, function(req, res, next) {
   var q = {where: {secretToken: req.params.token}};
   User.find(q).done(function(err, user) {
     /* istanbul ignore if */
@@ -127,7 +144,7 @@ router.get('/emailConfirmation/:token', function(req, res, next) {
   });  
 });
 
-router.post('/getToken', function(req, res, next) {
+router.post('/getToken', limiter, function(req, res, next) {
   if (!req.body.email) {
     var err = new Error("Email Required");
     err.status = 400;
@@ -184,7 +201,7 @@ router.post('/expireToken', check, function(req, res, next) {
     });
 });
 
-router.post('/requestPasswordReset', function(req, res, next) {
+router.post('/requestPasswordReset', limiter, function(req, res, next) {
   if (!req.body.email) {
     var err = new Error("email required");
     err.status = 400;
@@ -217,7 +234,7 @@ router.get('/resetPassword/:token', function(req, res, next) {
   res.render("resetForm", {token: req.params.token});
 });
 
-router.post('/resetPassword/:token', function(req, res, next) {
+router.post('/resetPassword/:token', limiter, function(req, res, next) {
   var q = {where: {secretToken: req.params.token}};
   User.find(q).done(function(err, user) {
     /* istanbul ignore if */
