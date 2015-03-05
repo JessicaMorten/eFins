@@ -4,6 +4,6 @@ machine:
   node:
     version: 0.12
   services:
-    - postgres
+    - postgresql
   environment:
     EFINS_TEST_DB: postgres://ubuntu@localhost:5432/circle_test
