@@ -123,6 +123,9 @@ module.exports = function(sequelize, DataTypes) {
           next(new Error("User not yet approved."));
         }
       },
+      sendPasswordReset: function sendPasswordReset(next) {
+        sendPasswordResetToUser(this, next);
+      },
       isAllowed: function userIsAllowed() {
         return this.approved && this.emailConfirmed;
       } 
@@ -159,6 +162,22 @@ function sendEmailConfirmationToUser(user, next) {
     context: {
       confirm: absUrl("/auth/emailConfirmation/", user.secretToken),
       name: user.name
+    }
+  }, function(err, json) {
+    next(err, user);
+  });
+}
+
+function sendPasswordResetToUser(user, next) {
+  emailer.sendTemplates({
+    to: user.email,
+    subject: "Reset your eFins password",
+    html: 'email/reset',
+    text: 'email/resetText',
+    context: {
+      confirm: absUrl("/auth/resetPassword/", user.secretToken),
+      name: user.name,
+      admin: emailer.adminEmail
     }
   }, function(err, json) {
     next(err, user);

@@ -184,13 +184,74 @@ router.post('/expireToken', check, function(req, res, next) {
     });
 });
 
-// router.post('/logout', function(req, res) {
-//   res.send('respond with a resource');
-// });
+router.post('/requestPasswordReset', function(req, res, next) {
+  if (!req.body.email) {
+    var err = new Error("email required");
+    err.status = 400;
+    next(err);
+  } else {
+    User.findOne({where: {email: req.body.email}})
+    .done(function(err, user) {
+      if (err) {
+        next(err);
+      } else if (!user) {
+        var err = new Error("No user with that email address");
+        err.status = 404;
+        next(err);
+      } else {
+        user.sendPasswordReset(function(err) {
+          /* istanbul ignore if */
+          if (err) {
+            next(err);
+          } else {
+            res.send(
+              "You will recieve an email with reset instructions.");
+          }
+        });        
+      }
+    });
+  }
+});
 
-// router.get('/', passport.authorize('w/user', {session: false}),
-//   function(req, res) {
-//     res.send('user details');
-//   });
+router.get('/resetPassword/:token', function(req, res, next) {
+  res.render("resetForm", {token: req.params.token});
+});
+
+router.post('/resetPassword/:token', function(req, res, next) {
+  var q = {where: {secretToken: req.params.token}};
+  User.find(q).done(function(err, user) {
+    /* istanbul ignore if */
+    if (err) {
+      next(err);
+    } else {
+      if (user) {
+        if (!req.body.password) {
+          var err = new Error("Must provide a new password");
+          err.status = 400;
+          next(err);
+        } else {
+          console.log('setting password to', req.body.password);
+          user.setPassword(req.body.password, function(err) {
+            if (err) {
+              next(err);
+            } else {
+              user.save().done(function(err) {
+                if (err) {
+                  next(err);
+                } else {
+                  res.render("activated", {openApp: "efins://activate"});
+                }
+              });
+            }
+          });
+        }
+      } else {
+        err = new Error("User does not exist");
+        err.status = 404;
+        next(err);
+      }
+    }
+  });  
+});
 
 module.exports = router;

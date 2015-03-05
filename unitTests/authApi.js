@@ -435,5 +435,128 @@ exports.expireToken = {
       test.done();
     });
   }
+}
 
+exports.passwordReset = {
+  noEmail: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: false,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      request.post(absUrl("/auth/requestPasswordReset"), function(err, res) {
+        test.ifError(err);
+        test.equals(res.statusCode, 400);
+        test.done();
+      });
+    });  
+  },
+
+  noUser: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: false,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      var form = {
+        form: {
+          email: "nope@example.com"
+        }
+      };
+      request.post(absUrl("/auth/requestPasswordReset"), form, function(err, res) {
+        test.ifError(err);
+        test.equals(res.statusCode, 404);
+        test.done();
+      });
+    });  
+  },
+
+  successful: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      var form = {
+        form: {
+          email: "test@example.com"
+        }
+      };
+      request.post(absUrl("/auth/requestPasswordReset"), form, function(err, res) {
+        test.ifError(err);
+        test.equals(res.statusCode, 200);
+        inbox(test, function($, email) {
+          test.equals(email.to, "test@example.com");
+          var link = $('[rel=reset]').attr('href');
+          request.get(link, function(err, res, body){
+            test.ifError(err);
+            test.equals(res.statusCode, 200);
+            var $ = cheerio.load(body);
+            var postLink = absUrl($('form').attr('action'));
+            var form = {form: {password: "test"}};
+            request.post(postLink, form, function(err, res, body){
+              test.ifError(err);
+              test.equals(res.statusCode, 200);
+              var form = {
+                form: {
+                  email: "test@example.com",
+                  password: "test"
+                }
+              };
+              request.post(absUrl("/auth/getToken"), form, function(err, res, body) {
+                test.ifError(err);
+                test.equals(res.statusCode, 200);
+                test.done();
+              });
+            });
+          });
+        });
+      });
+    });  
+  },
+
+  noPasswordGiven: function(test) {
+    createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      approved: true,
+      emailConfirmed: true,
+      password: 'password'
+    }, function(err, user) {
+      test.ifError(err);
+      var form = {
+        form: {
+          email: "test@example.com"
+        }
+      };
+      var url = absUrl("/auth/resetPassword/" + user.secretToken);
+      request.post(url, form, function(err, res, body) {
+        test.ifError(err);
+        test.equals(res.statusCode, 400);
+        test.done();
+      });
+    });
+  },
+
+  unknownUser: function(test) {
+    var form = {
+      form: {
+        email: "test@example.com"
+      }
+    };
+    request.post(absUrl("/auth/resetPassword/1234"), form, function(err, res, body) {
+      test.ifError(err);
+      test.equals(res.statusCode, 404);
+      test.done();
+    });
+  }
 }
