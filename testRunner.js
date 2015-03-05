@@ -10,14 +10,18 @@ if (files.length === 0) {
   files = ['unitTests'];
 }
 
-var reporter = require('nodeunit').reporters.default;
+if (process.env.CIRCLECI) {
+  var reporter = require('nodeunit').reporters.default;
+} else {
+  var reporter = require('nodeunit').reporters.junit;
+}
 
 var Models = require('./models');
 
 Models.sequelize.sync({force: true})
   .done(function() {
     process.chdir(__dirname);
-    reporter.run(files, null, function() {
+    reporter.run(files, {output: "./test-results"}, function() {
       Models.sequelize.close();
     });
   });
