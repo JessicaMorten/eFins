@@ -16,7 +16,11 @@ var reporter = require('nodeunit').reporters[process.env.EFINS_TEST_REPORTER];
 
 var opts = null;
 if (process.env.EFINS_TEST_REPORTER === 'junit') {
-  opts = {output: "./test-results"};
+  if (process.env.CIRCLE_TEST_REPORTS) {
+    opts = {output: process.env.CIRCLE_TEST_REPORTS + "/nodeunit"};
+  } else {
+    opts = {output: "./test-results"};
+  }
 }
 
 var Models = require('./models');
