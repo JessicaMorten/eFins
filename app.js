@@ -7,7 +7,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var sequelize = require('sequelize');
+var ResAjax = require('./helpers/resajax');
+var epilogue = require('epilogue')
+var sequelize = require('sequelize')
 
 if (process.env.NODE_ENV === 'test') {
     console.log('Hook loader for coverage - ensure this is not production!');
@@ -55,6 +57,10 @@ passport.use('token', new BearerStrategy(
 ));
 
 var app = express();
+epilogue.initialize({
+  app: app,
+  sequelize: Models.sequelize
+})
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -85,6 +91,15 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
+
+app.use( function(req, res, next) {
+    res.json403 = ResAjax.err403
+    res.json401 = ResAjax.err401
+    res.json404 = ResAjax.err404
+    res.json500 = ResAjax.err500
+    next()
+});
+
 
 // error handlers
 
