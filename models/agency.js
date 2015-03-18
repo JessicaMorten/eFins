@@ -2,7 +2,6 @@
 
 module.exports = function(sequelize, DataTypes) {
   var Agency = sequelize.define("Agency", {
- 
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -11,9 +10,17 @@ module.exports = function(sequelize, DataTypes) {
         notEmpty: true
       }
     },
+    usn: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      unique: true,
+      validate: {
+        notEmpty: true
+      }
+    }
   }, {
     classMethods: {
-      
+      apiSetup: apiSetup
     },
     instanceMethods: {
       
@@ -24,4 +31,17 @@ module.exports = function(sequelize, DataTypes) {
   });
   return Agency;
 };
+
+function apiSetup() {
+  return( {
+    configHash: {
+      endpoints: ['/agencies', '/agencies/:id'],
+      actions: ['list']
+    },
+    customizationFunction: function(agencies) {
+      agencies.use({});
+      return;
+    }
+  });
+}
 

@@ -10,6 +10,7 @@ var bodyParser = require('body-parser');
 var ResAjax = require('./helpers/resajax');
 var epilogue = require('epilogue')
 var sequelize = require('sequelize')
+var usnGenerator = require('./helpers/usnGenerator')
 
 if (process.env.NODE_ENV === 'test') {
     console.log('Hook loader for coverage - ensure this is not production!');
@@ -59,8 +60,15 @@ passport.use('token', new BearerStrategy(
 var app = express();
 epilogue.initialize({
   app: app,
-  sequelize: Models.sequelize
+  sequelize: Models.sequelize,
+  base: '/api',
+  updateMethod: 'PUT'
 })
+
+Models.createRestApis(epilogue);
+Models.initializeUsnGenerator().then(usnGenerator.currentHighest).then(usnGenerator.getNext).then(function(num) {console.log("Next:", num)})
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

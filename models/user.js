@@ -58,7 +58,8 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     classMethods: {
-      // cb - this was auto-generated. Not sure of it's utility
+      apiSetup: apiSetup,
+      // cb - this was auto-generated. Not sure of its utility
       associate: function(models) {
         // associations can be defined here
       },
@@ -181,5 +182,18 @@ function sendPasswordResetToUser(user, next) {
     }
   }, function(err, json) {
     next(err, user);
+  });
+}
+
+function apiSetup() {
+  return( {
+    configHash: {
+      endpoints: ['/users', '/users/:id'],
+      actions: ['list', 'read']
+    },
+    customizationFunction: function(users) {
+      users.use({});
+      return;
+    }
   });
 }
