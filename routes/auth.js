@@ -145,6 +145,7 @@ router.get('/emailConfirmation/:token', limiter, function(req, res, next) {
 });
 
 router.post('/getToken', limiter, function(req, res, next) {
+  console.log('getToken')
   if (!req.body.email) {
     var err = new Error("Email Required");
     err.status = 400;
@@ -167,7 +168,9 @@ router.post('/getToken', limiter, function(req, res, next) {
                   }
                 });
               } else {
-                err = new Error("Account not yet approved.");
+                var msg = "Account not yet approved"
+                if (user.approved) msg = "Email not confirmed"
+                err = new Error(msg);
                 err.status = 403;
                 next(err);
               }

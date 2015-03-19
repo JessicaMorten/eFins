@@ -121,6 +121,7 @@ if (app.get('env') === 'development') {
       err.message = "Validation Error: ";
       err.message += err.errors.map(
         function(e){return e.message;}).join(', ');
+      err.status = 400
     }
     res.status(err.status || 500);
     res.render('error', {
