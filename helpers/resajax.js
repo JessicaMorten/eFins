@@ -1,15 +1,11 @@
 "use strict";
 var AjaxError = require('./ajaxerror')
 
-// module.exports.err500 = function(errobj) { var myerr = _.bind(_err, this); return myerr(errobj, 500) }
-// module.exports.err403 = function(errobj) { var myerr = _.bind(_err, this); return myerr(errobj, 403) }
-// module.exports.err401 = function(errobj) { var myerr = _.bind(_err, this); return myerr(errobj, 401) }
-// module.exports.err404 = function(errobj) { var myerr = _.bind(_err, this); return myerr(errobj, 404) }
-module.exports.err500 = function(errobj) { return _err(errobj, 500) }
-module.exports.err403 = function(errobj) { return _err(errobj, 403) }
-module.exports.err401 = function(errobj) { return _err(errobj, 401) }
-module.exports.err404 = function(errobj) { return _err(errobj, 404) }
-var _err = function(errobj, code) {
+module.exports.err500 = function(errobj) { return _err(errobj, 500, this ) }
+module.exports.err403 = function(errobj) { return _err(errobj, 403, this ) }
+module.exports.err401 = function(errobj) { return _err(errobj, 401, this ) }
+module.exports.err404 = function(errobj) { return _err(errobj, 404, this ) }
+var _err = function(errobj, code, res) {
   if (!(errobj instanceof Error)) {
     if ('object' === typeof errobj) {
       errobj = new Error(JSON.stringify(errobj))
@@ -18,5 +14,5 @@ var _err = function(errobj, code) {
     }
   }
   var ae = new AjaxError(code, errobj)
-  return this.status(code).json(ae)
+  return res.status(code).json(ae)
 }

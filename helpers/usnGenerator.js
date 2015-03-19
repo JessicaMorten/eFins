@@ -37,15 +37,16 @@ var _isntAlreadyPresentError = function(e) {
 }
 
 var setupHooks = function(modeldef) {
-	modeldef.hook('afterCreate', _applyUpdatedUsn)
-	modeldef.hook('afterDestroy', _applyUpdatedUsn)
-	modeldef.hook('afterUpdate',_applyUpdatedUsn)
-	modeldef.hook('afterBulkCreate', _bulkApplyUpdatedUsn)
-	modeldef.hook('afterBulkUpdate', _bulkApplyUpdatedUsn)
-	modeldef.hook('afterBulkDestroy', _bulkApplyUpdatedUsn)
+	modeldef.hook('beforeCreate', _applyUpdatedUsn)
+	modeldef.hook('beforeDestroy', _applyUpdatedUsn)
+	modeldef.hook('beforeUpdate',_applyUpdatedUsn)
+	modeldef.hook('beforeBulkCreate', _bulkApplyUpdatedUsn)
+	modeldef.hook('beforeBulkUpdate', _bulkApplyUpdatedUsn)
+	modeldef.hook('beforeBulkDestroy', _bulkApplyUpdatedUsn)
 }
 
 var _applyUpdatedUsn = function (instance, options, fn) {
+	console.log("running _applyUpdateUsn")
 	getNext().then(function(nextUsn) {
 		instance.usn = nextUsn;
 		fn(null, instance);

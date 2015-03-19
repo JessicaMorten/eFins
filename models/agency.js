@@ -12,11 +12,11 @@ module.exports = function(sequelize, DataTypes) {
     },
     usn: {
       type: DataTypes.BIGINT,
-      allowNull: false,
-      unique: true,
-      validate: {
-        notEmpty: true
-      }
+      //allowNull: false,
+      unique: true//,
+      // validate: {
+      //   notEmpty: true
+      // }
     }
   }, {
     classMethods: {

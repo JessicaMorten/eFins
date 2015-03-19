@@ -19,6 +19,7 @@ if (process.env.NODE_ENV === 'test') {
 
 var Models = require('./models');
 
+
 var routes = require('./routes/index');
 var auth = require('./routes/auth');
 var sync = require('./routes/sync');
@@ -66,10 +67,10 @@ epilogue.initialize({
   updateMethod: 'PUT'
 })
 
-Models.createRestApis(epilogue)
-Models.initializeUsnGenerator()
-app.locals.sequencedModelDefinitions = Models.allSequencedModelDefinitions
-
+Models.init().then(function() {
+  Models.createRestApis(epilogue)
+  Models.initializeUsnGenerator()
+})
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hjs');

@@ -1,17 +1,31 @@
 "use strict";
 
+var Promise = require('bluebird')
 var fs        = require("fs");
 var path      = require("path");
 var Sequelize = require("sequelize");
 var usnGenerator = require('../helpers/usnGenerator')
 var basename  = path.basename(module.filename);
+if (process.env.NODE_ENV == 'test') {
+    pgConn = process.env.EFINS_TEST_DB || 
+      "postgres://localhost:5432/efins-test"
+  } else {
+    pgConn = process.env.EFINS_DB || 
+      "postgres://localhost:5432/efins"
+  }
+var sequelize = new Sequelize(pgConn, {logging: false});
+var db        = {};
+var epilogueCreatorFunctions = [];
+var _allSequencedModelDefinitions = [];
 
 var pgConn;
+var inited = false;
+
+Promise.promisifyAll(fs)
 
 var _setupUsnHooks = function(modeldef) {
-  modeldef.describe().then(function (descHash) {
+  return modeldef.describe().then(function (descHash) {
     if(! descHash.usn && (modeldef.name != "Session")) {
-      console.log(descHash)
       throw new Error("Model definition for " + modeldef.name + " does not contain a USN property.  Define one.")
     }
     if (modeldef.name === "Session") {
@@ -25,47 +39,36 @@ var _setupUsnHooks = function(modeldef) {
       usnGenerator.setupHooks(modeldef);
       _allSequencedModelDefinitions.push(modeldef);
     }
+    return modeldef
   })
 }
 
-/* istanbul ignore else */
-if (process.env.NODE_ENV == 'test') {
-  pgConn = process.env.EFINS_TEST_DB || 
-    "postgres://localhost:5432/efins-test"
-} else {
-  pgConn = process.env.EFINS_DB || 
-    "postgres://localhost:5432/efins"
+db.init = function() {
+  return(fs.readdirAsync(__dirname)
+    .filter(function(file) {
+      return (file.indexOf(".") !== 0) && (file !== basename);
+    })
+    .map(function(file) {
+      var model = sequelize["import"](path.join(__dirname, file));
+      db[model.name] = model;
+      return model
+    }).map(function(model) {
+      if ("associate" in model) {
+        model.associate(db);
+      }
+      if ("apiSetup" in model) {
+        var hash = model.apiSetup();
+        hash.configHash.model = model;
+        epilogueCreatorFunctions.push( hash );
+      }
+      return model
+    })
+    .map( _setupUsnHooks )
+    .map(function(model) {
+      model.sync()
+    }) 
+  )
 }
-
-var sequelize = new Sequelize(pgConn, {logging: false});
-var db        = {};
-var epilogueCreatorFunctions = [];
-var _allSequencedModelDefinitions = [];
-
-fs
-  .readdirSync(__dirname)
-  .filter(function(file) {
-    return (file.indexOf(".") !== 0) && (file !== basename);
-  })
-  .forEach(function(file) {
-    var model = sequelize["import"](path.join(__dirname, file));
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(function(modelName) {
-  /* istanbul ignore next */
-  if ("associate" in db[modelName]) {
-    db[modelName].associate(db);
-  }
-  if ("apiSetup" in db[modelName]) {
-    var hash = db[modelName].apiSetup();
-    hash.configHash.model = db[modelName];
-    epilogueCreatorFunctions.push( hash );
-  }
-
-  _setupUsnHooks(db[modelName]);
-  db[modelName].sync()
-});
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

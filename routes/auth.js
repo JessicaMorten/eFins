@@ -145,7 +145,6 @@ router.get('/emailConfirmation/:token', limiter, function(req, res, next) {
 });
 
 router.post('/getToken', limiter, function(req, res, next) {
-  console.log('getToken')
   if (!req.body.email) {
     var err = new Error("Email Required");
     err.status = 400;
@@ -164,6 +163,7 @@ router.post('/getToken', limiter, function(req, res, next) {
                     next(err);
                   } else {
                     res.set('Authorization', session.toString());
+                    console.log(JSON.stringify(session));
                     res.send(JSON.stringify(session));
                   }
                 });
