@@ -14,10 +14,17 @@ var _setupUsnHooks = function(modeldef) {
       console.log(descHash)
       throw new Error("Model definition for " + modeldef.name + " does not contain a USN property.  Define one.")
     }
-  }).then( function () {
+    if (modeldef.name === "Session") {
+      return false
+    } else {
+      return true
+    }
+  }).then( function ( shouldApply ) {
     //Set up hooks here
-    usnGenerator.setupHooks(modeldef);
-
+    if(shouldApply) {
+      usnGenerator.setupHooks(modeldef);
+      _allSequencedModelDefinitions.push(modeldef);
+    }
   })
 }
 
@@ -33,6 +40,7 @@ if (process.env.NODE_ENV == 'test') {
 var sequelize = new Sequelize(pgConn, {logging: false});
 var db        = {};
 var epilogueCreatorFunctions = [];
+var _allSequencedModelDefinitions = [];
 
 fs
   .readdirSync(__dirname)
@@ -72,6 +80,10 @@ db.createRestApis = function(epilogue) {
 db.initializeUsnGenerator = function() {
   return usnGenerator.initialize(db.sequelize);
 };
+
+db.allSequencedModelDefinitions = function() {
+  return _allSequencedModelDefinitions;
+}
 
   
 

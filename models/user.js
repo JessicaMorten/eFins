@@ -10,6 +10,14 @@ var randomToken = function() {
 
 module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define("User", {
+    usn: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      unique: true,
+      validate: {
+        notEmpty: true
+      }
+    },
     email: {
       type: DataTypes.STRING,
       allowNull: false,

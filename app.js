@@ -21,6 +21,7 @@ var Models = require('./models');
 
 var routes = require('./routes/index');
 var auth = require('./routes/auth');
+var sync = require('./routes/sync');
       
 var absUrl = require('./absoluteUrl.js');
 
@@ -65,10 +66,9 @@ epilogue.initialize({
   updateMethod: 'PUT'
 })
 
-Models.createRestApis(epilogue);
-Models.initializeUsnGenerator().then(usnGenerator.currentHighest).then(usnGenerator.getNext).then(function(num) {console.log("Next:", num)})
-
-
+Models.createRestApis(epilogue)
+Models.initializeUsnGenerator()
+app.locals.sequencedModelDefinitions = Models.allSequencedModelDefinitions
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -92,6 +92,7 @@ if (process.env.NODE_ENV === 'test') {
 
 app.use(passport.authorize('token', {session: false}));
 app.use('/', routes);
+app.use('/', sync);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
