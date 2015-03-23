@@ -17,6 +17,7 @@ router.use( function(req, res, next) {
 
 router.get('/api/1/sync', function(req, res, next) {
 	// TODO validate each of these params
+	//TODO filter secret attributes out of models
 	if(! req.query.afterUsn ) {
 		return res.json403("afterUsn required")
 	}
