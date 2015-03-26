@@ -163,7 +163,6 @@ router.post('/getToken', limiter, function(req, res, next) {
                     next(err);
                   } else {
                     res.set('Authorization', session.toString());
-                    console.log(JSON.stringify(session));
                     res.send(JSON.stringify(session));
                   }
                 });

@@ -15,7 +15,7 @@ router.use( function(req, res, next) {
 
 
 
-router.get('/api/1/sync', function(req, res, next) {
+router.get('/sync', function(req, res, next) {
 	// TODO validate each of these params
 	//TODO filter secret attributes out of models
 	if(! req.query.afterUsn ) {
@@ -50,11 +50,12 @@ router.get('/api/1/sync', function(req, res, next) {
 	})
 })
 
-router.post('/api/1/sync', function(req, res, next) {
+router.post('/sync', function(req, res, next) {
 	var json = {}
 
 	return res.status(200).json(json);
 
 })
+
 
 module.exports = router

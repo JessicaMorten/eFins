@@ -1,6 +1,5 @@
 "use strict";
 var im = require('istanbul-middleware');
-
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -19,11 +18,6 @@ if (process.env.NODE_ENV === 'test') {
 
 var Models = require('./models');
 
-
-var routes = require('./routes/index');
-var auth = require('./routes/auth');
-var sync = require('./routes/sync');
-      
 var absUrl = require('./absoluteUrl.js');
 
 // Authorization
@@ -63,66 +57,78 @@ var app = express();
 epilogue.initialize({
   app: app,
   sequelize: Models.sequelize,
-  base: '/api',
+  base: '/api/1/rest',
   updateMethod: 'PUT'
 })
 
 Models.init().then(function() {
   Models.createRestApis(epilogue)
   Models.initializeUsnGenerator()
-})
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hjs');
+    // view engine setup
+  app.set('views', path.join(__dirname, 'views'));
+  app.set('view engine', 'hjs');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+  // uncomment after placing your favicon in /public
+  //app.use(favicon(__dirname + '/public/favicon.ico'));
+  app.use(logger('dev'));
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(cookieParser());
+  app.use(express.static(path.join(__dirname, 'public')));
 
-app.enable('trust proxy');
+  app.enable('trust proxy');
 
-app.use('/auth', auth);
-if (process.env.NODE_ENV === 'test') {
-    //enable coverage endpoints under /coverage
-    app.use('/coverage', im.createHandler());
-}
+  if (process.env.NODE_ENV === 'test') {
+      //enable coverage endpoints under /coverage
+      app.use('/coverage', im.createHandler());
+  }
+  var routes = require('./routes/index');
+  var auth = require('./routes/auth');
+  var sync = require('./routes/sync');   
+  app.use('/auth', auth)
+  app.use(passport.authorize('token', {session: false}));
+  app.use('/', routes);
+  app.use('/api/1', sync)
 
-app.use(passport.authorize('token', {session: false}));
-app.use('/', routes);
-app.use('/', sync);
+  
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
-
-app.use( function(req, res, next) {
-    res.json403 = ResAjax.err403
-    res.json401 = ResAjax.err401
-    res.json404 = ResAjax.err404
-    res.json500 = ResAjax.err500
-    next()
-});
+  // catch 404 and forward to error handler
+  app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+  });
 
 
-// error handlers
+  // error handlers
 
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
+  // development error handler
+  // will print stacktrace
+  if (app.get('env') === 'development') {
+    app.use(function(err, req, res, next) {
+      console.log('handled error');
+      if (err instanceof sequelize.ValidationError) {
+        err.message = "Validation Error: ";
+        err.message += err.errors.map(
+          function(e){return e.message;}).join(', ');
+        err.status = 400
+      }
+      res.status(err.status || 500);
+      res.render('error', {
+        message: err.message,
+        error: err
+      });
+    });
+  }
+
+  // production error handler
+  // no stacktraces leaked to user
   app.use(function(err, req, res, next) {
     console.log('handled error');
     if (err instanceof sequelize.ValidationError) {
       err.message = "Validation Error: ";
       err.message += err.errors.map(
         function(e){return e.message;}).join(', ');
-      err.status = 400
     }
     res.status(err.status || 500);
     res.render('error', {
@@ -130,28 +136,12 @@ if (app.get('env') === 'development') {
       error: err
     });
   });
-}
 
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
-  console.log('handled error');
-  if (err instanceof sequelize.ValidationError) {
-    err.message = "Validation Error: ";
-    err.message += err.errors.map(
-      function(e){return e.message;}).join(', ');
-  }
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: err
-  });
-});
-
-sequelize.Promise.onPossiblyUnhandledRejection(function(err, promise) {
-  console.error(err.stack);
-  server.close(function() {
-    process.exit(1);
+  sequelize.Promise.onPossiblyUnhandledRejection(function(err, promise) {
+    console.error(err.stack);
+    server.close(function() {
+      process.exit(1);
+    });
   });
 });
 
