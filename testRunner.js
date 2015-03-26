@@ -24,13 +24,15 @@ if (process.env.EFINS_TEST_REPORTER === 'junit') {
 }
 
 var Models = require('./models');
-
-Models.sequelize.sync({force: true})
-  .done(function() {
-    process.chdir(__dirname);
-    reporter.run(files, opts, function() {
-      Models.sequelize.close();
+Models.init().then(function() {
+  Models.initializeUsnGenerator()
+  Models.sequelize.sync({force: true})
+    .done(function() {
+      process.chdir(__dirname);
+      reporter.run(files, opts, function() {
+        Models.sequelize.close();
+      });
     });
-  });
+});
 
 

@@ -4,7 +4,8 @@ var mailClient = new MailClient("./sendgridEmails/");
 var request = require('request');
 var absUrl = require('../absoluteUrl')
 var cheerio = require('cheerio');
-var User = require('../models').User;
+var Models = require('../models');
+var User = Models.User;
 
 function inbox(test, next) {
   mailClient.getLatest(function(err, email) {
@@ -38,7 +39,8 @@ function createUser(opts, next) {
 }
 
 exports.setUp = function(done) {
-  require('../models').sequelize.sync({force: true}).done(done);
+
+  Models.sequelize.sync({force: true}).done(done);
 }
 
 exports.successfulUserRegistrationWorkflow = function(test) {
@@ -560,3 +562,4 @@ exports.passwordReset = {
     });
   }
 }
+
