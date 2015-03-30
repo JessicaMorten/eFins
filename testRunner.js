@@ -10,6 +10,7 @@ if (files.length === 0) {
   files = ['unitTests'];
 }
 
+
 process.env.EFINS_TEST_REPORTER = process.env.EFINS_TEST_REPORTER || "default";
 console.log('using', process.env.EFINS_TEST_REPORTER, 'reporter');
 var reporter = require('nodeunit').reporters[process.env.EFINS_TEST_REPORTER];
@@ -23,8 +24,15 @@ if (process.env.EFINS_TEST_REPORTER === 'junit') {
   }
 }
 
+var Promise = require("bluebird");
+
+Promise.onPossiblyUnhandledRejection(function(error){
+  throw error
+});
+
 var Models = require('./models');
-Models.init().then(function() {
+Models.init()
+.then(function() {
   Models.initializeUsnGenerator()
   Models.sequelize.sync({force: true})
     .done(function() {
@@ -32,7 +40,5 @@ Models.init().then(function() {
       reporter.run(files, opts, function() {
         Models.sequelize.close();
       });
-    });
-});
-
-
+    })
+})
