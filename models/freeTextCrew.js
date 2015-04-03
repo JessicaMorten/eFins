@@ -22,8 +22,8 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsToMany(models.PatrolLog);
-        this.belongsToMany(models.Activity);
+        this.belongsToMany(models.PatrolLog, {through: "FreeTextCrew2PatrolLog"});
+        this.belongsToMany(models.Activity, {through: "Activity2FreeTextCrew"});
       }
     },
     instanceMethods: {

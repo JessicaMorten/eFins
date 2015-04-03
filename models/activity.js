@@ -33,20 +33,20 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.hasMany(models.FreeTextCrew);
-        this.hasMany(models.User);
-        this.hasMany(models.Catch);
-        this.hasOne(models.Port);
-        this.hasOne(models.Vessel);
-        this.hasOne(models.Fishery);
-        this.hasOne(models.Action);
-        this.hasOne(models.Person, {as: 'captain'});
-        this.hasOne(models.Person, {as: 'person'});
-        this.hasMany(models.Person, {as: 'crew'})
-        this.hasMany(models.Photo)
-        this.hasMany(models.EnforcementActionTaken, {as: 'enforcementActionsTaken'})
-        this.hasOne(models.ContactType)
-        this.belongsTo(models.PatrolLog)
+        this.belongsToMany(models.FreeTextCrew, {through: "Activity2FreeTextCrew"});
+        this.belongsToMany(models.User, {through: "Activity2User"});
+        this.belongsToMany(models.Catch, {through: "Activity2Catch"});
+        this.belongsTo(models.Port, {through: "Activity2Port"});
+        this.belongsTo(models.Vessel, {through: "Activity2Vessel"});
+        this.belongsTo(models.Fishery, {through: "Activity2Fishery"});
+        this.belongsTo(models.Action, {through: "Action2Activity"});
+        this.belongsTo(models.Person, {as: 'captain', through: "Activity2Person"});
+        this.belongsTo(models.Person, {as: 'person', through: "Activity2Person"});
+        this.belongsToMany(models.Person, {as: 'crew', through: "Activity2Person"})
+        this.belongsToMany(models.Photo, {through: "Activity2Photo"})
+        this.belongsToMany(models.EnforcementActionTaken, {as: 'enforcementActionsTaken', through: "Activity2EnforcementActionTaken"})
+        this.belongsTo(models.ContactType, {through: "Activity2ContactType"})
+        this.belongsTo(models.PatrolLog, {through: "Activity2PatrolLog"})
       }
     },
     instanceMethods: {

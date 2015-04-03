@@ -14,10 +14,10 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.hasOne(models.ViolationType);
-        this.hasOne(models.RegulatoryCode, {as: 'code'})
-        this.hasOne(models.EnforcementActionType)
-        this.belongsToMany(models.Activity);
+        this.belongsTo(models.ViolationType, {through: "EnforcementActionTaken2ViolationType"});
+        this.belongsTo(models.RegulatoryCode, {as: 'code', through: "EnforcementActionTaken2RegulatoryCode"})
+        this.belongsTo(models.EnforcementActionType, {through: "EnforcementActionTaken2EnforcementActionType"})
+        this.belongsToMany(models.Activity, {through: "Activity2EnforcementActionTaken"});
       }
     },
     instanceMethods: {

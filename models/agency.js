@@ -23,8 +23,8 @@ module.exports = function(sequelize, DataTypes) {
       apiSetup: apiSetup,
       associate: function(models) {
         // associations can be defined here
-        this.hasMany(models.User);
-        this.hasMany(models.AgencyVessel);
+        this.belongsToMany(models.User, {through: "Agency2User"});
+        this.belongsToMany(models.AgencyVessel, {through: "Agency2AgencyVessel"});
       }
     },
     instanceMethods: {

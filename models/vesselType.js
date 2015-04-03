@@ -22,7 +22,7 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsToMany(models.Vessel);
+        this.belongsToMany(models.Vessel, {through: "Vessel2VesselType"});
       }
     },
     instanceMethods: {

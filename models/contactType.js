@@ -17,7 +17,7 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsToMany(models.Activity);
+        this.belongsToMany(models.Activity, {through: "Activity2ContactType"});
       }
     },
     instanceMethods: {
