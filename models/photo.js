@@ -1,14 +1,21 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-  var Agency = sequelize.define("Agency", {
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        notEmpty: true
-      }
+  var Photo = sequelize.define("Photo", {
+    originalUrl: {
+      type: DataTypes.STRING
+    },
+    latitude: {
+      type: DataTypes.FLOAT
+    },
+    longitude: {
+      type: DataTypes.FLOAT
+    },
+    lowResolution: {
+      type: DataTypes.BLOB
+    },
+    originalBlob: {
+      type: DataTypes.BLOB
     },
     usn: {
       type: DataTypes.BIGINT,
@@ -22,9 +29,7 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        // associations can be defined here
-        this.hasMany(models.User);
-        this.hasMany(models.AgencyVessel);
+        this.belongsToMany(models.Activity);
       }
     },
     instanceMethods: {
@@ -34,19 +39,18 @@ module.exports = function(sequelize, DataTypes) {
     paranoid: true,
     timestamps: true
   });
-  return Agency;
+  return Photo;
 };
 
 function apiSetup() {
   return( {
     configHash: {
-      endpoints: ['/agency', '/agency/:id'],
+      endpoints: ['/photo', '/photo/:id'],
       actions: ['list']
     },
-    customizationFunction: function(agencies) {
-      agencies.use({});
+    customizationFunction: function(photos) {
+      photos.use({});
       return;
     }
   });
 }
-

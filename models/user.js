@@ -70,6 +70,9 @@ module.exports = function(sequelize, DataTypes) {
       // cb - this was auto-generated. Not sure of its utility
       associate: function(models) {
         // associations can be defined here
+        this.belongsToMany(models.Activity);
+        this.belongsToMany(models.PatrolLog);
+        this.belongsTo(models.Agency);
       },
       register: function(opts, next) {
         if (!opts.password) {
@@ -196,7 +199,7 @@ function sendPasswordResetToUser(user, next) {
 function apiSetup() {
   return( {
     configHash: {
-      endpoints: ['/users', '/users/:id'],
+      endpoints: ['/user', '/user/:id'],
       actions: ['list', 'read']
     },
     customizationFunction: function(users) {

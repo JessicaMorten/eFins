@@ -50,6 +50,7 @@ db.init = function() {
     })
     .map(function(file) {
       var model = sequelize["import"](path.join(__dirname, file));
+      model.sync()
       db[model.name] = model;
       return model
     }).map(function(model) {
@@ -64,9 +65,12 @@ db.init = function() {
       return model
     })
     .map( _setupUsnHooks )
-    .map(function(model) {
-      model.sync()
-    }) 
+    .then( function() {
+      sequelize.sync()
+    })
+    // .map(function(model) {
+    //   model.sync()
+    // }) 
   )
 }
 

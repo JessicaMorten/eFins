@@ -1,14 +1,18 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-  var Agency = sequelize.define("Agency", {
+  var Person = sequelize.define("Person", {
     name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        notEmpty: true
-      }
+      type: DataTypes.STRING
+    },
+    license: {
+      type: DataTypes.STRING
+    },
+    dateOfBirth: {
+      type: DataTypes.DATE
+    },
+    address: {
+      type: DataTypes.STRING
     },
     usn: {
       type: DataTypes.BIGINT,
@@ -22,9 +26,8 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        // associations can be defined here
-        this.hasMany(models.User);
-        this.hasMany(models.AgencyVessel);
+        this.belongsToMany(models.Activity, {as: 'crewActivities'});
+        this.belongsToMany(models.Activity, {as: 'captainActivities'});
       }
     },
     instanceMethods: {
@@ -34,19 +37,18 @@ module.exports = function(sequelize, DataTypes) {
     paranoid: true,
     timestamps: true
   });
-  return Agency;
+  return Person;
 };
 
 function apiSetup() {
   return( {
     configHash: {
-      endpoints: ['/agency', '/agency/:id'],
+      endpoints: ['/person', '/person/:id'],
       actions: ['list']
     },
-    customizationFunction: function(agencies) {
-      agencies.use({});
+    customizationFunction: function(ps) {
+      ps.use({});
       return;
     }
   });
 }
-

@@ -1,14 +1,9 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-  var Agency = sequelize.define("Agency", {
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        notEmpty: true
-      }
+  var Catch = sequelize.define("Catch", {
+    amount: {
+      type: DataTypes.INTEGER
     },
     usn: {
       type: DataTypes.BIGINT,
@@ -22,9 +17,8 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        // associations can be defined here
-        this.hasMany(models.User);
-        this.hasMany(models.AgencyVessel);
+        this.hasOne(models.Species);
+        this.belongsTo(models.Activity);
       }
     },
     instanceMethods: {
@@ -34,19 +28,18 @@ module.exports = function(sequelize, DataTypes) {
     paranoid: true,
     timestamps: true
   });
-  return Agency;
+  return Catch;
 };
 
 function apiSetup() {
   return( {
     configHash: {
-      endpoints: ['/agency', '/agency/:id'],
+      endpoints: ['/catch', '/catch/:id'],
       actions: ['list']
     },
-    customizationFunction: function(agencies) {
-      agencies.use({});
+    customizationFunction: function(catches) {
+      catches.use({});
       return;
     }
   });
 }
-

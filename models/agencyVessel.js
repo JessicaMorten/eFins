@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-  var Agency = sequelize.define("Agency", {
+  var AgencyVessel = sequelize.define("AgencyVessel", {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -22,9 +22,8 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        // associations can be defined here
-        this.hasMany(models.User);
-        this.hasMany(models.AgencyVessel);
+        this.belongsToMany(models.PatrolLog);
+        this.belongsTo(models.Agency);
       }
     },
     instanceMethods: {
@@ -34,17 +33,17 @@ module.exports = function(sequelize, DataTypes) {
     paranoid: true,
     timestamps: true
   });
-  return Agency;
+  return AgencyVessel;
 };
 
 function apiSetup() {
   return( {
     configHash: {
-      endpoints: ['/agency', '/agency/:id'],
+      endpoints: ['/agencyVessel', '/agencyVessel/:id'],
       actions: ['list']
     },
-    customizationFunction: function(agencies) {
-      agencies.use({});
+    customizationFunction: function(agencyVessels) {
+      agencyVessels.use({});
       return;
     }
   });
