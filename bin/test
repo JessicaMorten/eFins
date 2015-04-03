@@ -9,15 +9,22 @@ PORT=3003 \
 EFINS_HOSTNAME=localhost:3003 \
 EFINS_ADMIN_EMAIL=admin@efins.org \
 node_modules/istanbul/lib/cli.js cover --print none ./testRunner.js $1
-curl -s http://localhost:3003/coverage/download > cov.zip
-rm -rf cov
-unzip -q cov.zip -d cov
-rm -f cov.zip
-bin/mergeCoverages
-mv coverage/coverage.json .
-rm -rf coverage
-node_modules/istanbul/lib/cli.js report html
-rm -rf cov
-rm -f coverage.json
+if [ "$?" = "0" ]; then
+  STATUS=0
+  curl -s http://localhost:3003/coverage/download > cov.zip
+  rm -rf cov
+  unzip -q cov.zip -d cov
+  rm -f cov.zip
+  bin/mergeCoverages
+  mv coverage/coverage.json .
+  rm -rf coverage
+  node_modules/istanbul/lib/cli.js report html
+  rm -rf cov
+  rm -f coverage.json
+else
+  STATUS=1
+  echo "Failed to run tests"
+fi
 pm2 stop -s \"test-eFins\"
 pm2 delete -s \"test-eFins\"
+exit $STATUS
