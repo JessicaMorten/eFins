@@ -17,8 +17,8 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsTo(models.Species, {through: "Catch2Species"});
-        this.belongsTo(models.Activity, {through:"Activity2Catch"});
+        this.belongsTo(models.Species);
+        this.belongsTo(models.Activity);
       }
     },
     instanceMethods: {

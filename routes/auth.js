@@ -152,6 +152,7 @@ router.post('/getToken', limiter, function(req, res, next) {
   } else {
     User.find({where: { email: req.body.email }}).done(function(err, user) {
       if (err) {
+        console.log(err)
         next(err);
       } else {
         if (user) {
