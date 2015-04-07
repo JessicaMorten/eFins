@@ -86,9 +86,9 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsTo(models.User, {through: "PatrolLog2User"});
-        this.belongsTo(models.AgencyVessel, {through: "PatrolLog2AgencyVessel"});
-        this.belongsTo(models.Port, {as: "departurePort", through:"PatrolLog2Port"});
+        this.hasOne(models.User);
+        this.hasOne(models.AgencyVessel, {through: "PatrolLog2AgencyVessel"});
+        this.hasOne(models.Port);
         this.belongsToMany(models.FreeTextCrew, {through: "FreeTextCrew2PatrolLog"});
         this.belongsToMany(models.Activity, {through: "Activity2PatrolLog"});
       }

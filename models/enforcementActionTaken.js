@@ -14,9 +14,9 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsTo(models.ViolationType, {through: "EnforcementActionTaken2ViolationType"});
-        this.belongsTo(models.RegulatoryCode, {as: 'code', through: "EnforcementActionTaken2RegulatoryCode"})
-        this.belongsTo(models.EnforcementActionType, {through: "EnforcementActionTaken2EnforcementActionType"})
+        this.belongsTo(models.ViolationType);
+        this.belongsTo(models.RegulatoryCode, {as: 'code'})
+        this.belongsTo(models.EnforcementActionType)
         this.belongsToMany(models.Activity, {through: "Activity2EnforcementActionTaken"});
       }
     },

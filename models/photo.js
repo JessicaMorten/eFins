@@ -29,7 +29,7 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsTo(models.Activity, {through: "Activity2Photo"});
+        this.belongsTo(models.Activity);
       }
     },
     instanceMethods: {

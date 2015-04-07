@@ -50,13 +50,17 @@ db.init = function() {
     })
     .map(function(file) {
       var model = sequelize["import"](path.join(__dirname, file));
-      model.sync()
       db[model.name] = model;
       return model
     }).map(function(model) {
       if ("associate" in model) {
         model.associate(db);
       }
+      return model
+    }).map(function(model) {
+      model.sync()
+      return model
+    }).map(function(model) {
       if ("apiSetup" in model) {
         var hash = model.apiSetup();
         hash.configHash.model = model;

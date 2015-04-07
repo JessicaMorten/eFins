@@ -70,9 +70,9 @@ module.exports = function(sequelize, DataTypes) {
       // cb - this was auto-generated. Not sure of its utility
       associate: function(models) {
         // associations can be defined here
-        this.belongsToMany(models.Activity, {through: "Activity2User"});
-        this.belongsToMany(models.PatrolLog, {through: "PatrolLog2User"});
-        this.belongsTo(models.Agency);
+        models.User.belongsToMany(models.Activity, {through: "Activity2User"});
+        models.User.belongsToMany(models.PatrolLog, {through: "PatrolLog2User"});
+        models.User.belongsTo(models.Agency);
       },
       register: function(opts, next) {
         if (!opts.password) {

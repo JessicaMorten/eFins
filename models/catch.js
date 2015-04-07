@@ -18,7 +18,7 @@ module.exports = function(sequelize, DataTypes) {
       apiSetup: apiSetup,
       associate: function(models) {
         this.belongsTo(models.Species);
-        this.belongsTo(models.Activity);
+        this.hasOne(models.Activity);
       }
     },
     instanceMethods: {
