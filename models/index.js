@@ -24,7 +24,8 @@ var inited = false;
 Promise.promisifyAll(fs)
 
 var _setupUsnHooks = function(modeldef) {
-  return modeldef.describe().then(function (descHash) {
+  return modeldef.describe()
+  .then(function (descHash) {
     if(! descHash.usn && (modeldef.name != "Session")) {
       throw new Error("Model definition for " + modeldef.name + " does not contain a USN property.  Define one.")
     }
@@ -51,16 +52,16 @@ db.init = function() {
     .map(function(file) {
       var model = sequelize["import"](path.join(__dirname, file));
       db[model.name] = model;
-      return model
+      return model;
     }).map(function(model) {
       if ("associate" in model) {
-        model.associate(db);
+        model.associate(db) 
       }
       return model
-    }).map(function(model) {
-      model.sync()
-      return model
-    }).map(function(model) {
+    }).then(function(models) {
+      return sequelize.sync().then(function(){ return models})
+    })
+    .map(function(model) {
       if ("apiSetup" in model) {
         var hash = model.apiSetup();
         hash.configHash.model = model;
@@ -72,9 +73,6 @@ db.init = function() {
     .then( function() {
       sequelize.sync()
     })
-    // .map(function(model) {
-    //   model.sync()
-    // }) 
   )
 }
 
