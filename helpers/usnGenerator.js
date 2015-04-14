@@ -46,7 +46,7 @@ var setupHooks = function(modeldef) {
 }
 
 var _applyUpdatedUsn = function (instance, options, fn) {
-	console.log("running _applyUpdateUsn")
+	//console.log("running _applyUpdateUsn")
 	getNext().then(function(nextUsn) {
 		instance.usn = nextUsn;
 		fn(null, instance);
