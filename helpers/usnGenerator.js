@@ -19,7 +19,7 @@ var currentHighest = function () {
 		throw new Error("UsnGenerator currentHighest() called before initialization")
 	}
 	return sequelize.query("SELECT * FROM usnGenerator").spread( function(results, metadata) {
-		return(results[0]['lastvalue']);
+		return(parseInt(results[0]['last_value'] - 1));
 	});
 }
 
@@ -28,7 +28,7 @@ var getNext = function () {
 		throw new Error("UsnGenerator getNext() called before initialization")
 	}
 	return sequelize.query("SELECT nextval('usnGenerator')").spread( function(results, metadata) {
-		return(results[0]['nextval']);
+		return( parseInt(results[0]['nextval']) );
 	});
 }
 

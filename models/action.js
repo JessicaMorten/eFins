@@ -11,7 +11,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     usn: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       //allowNull: false,
       unique: true//,
       // validate: {
@@ -26,6 +26,11 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     instanceMethods: {
+      toJSON: function() {
+        var x = this.get()
+        x.id = x.id.toString()
+        return x
+      }
       
     }
   }, {
