@@ -24,19 +24,52 @@ router.get('/sync', function(req, res, next) {
 	if(! req.query.endOfLastSync ) {
 		return res.json403("endOfLastSync required")
 	}
-	if(! req.query.maxCount ) {
-		return res.json403("maxCount required")
-	}
-	var json = {}
-	var queryPromises = []
-	var allModels = Models.allSequencedModelDefinitions()
-	Promise.map(allModels, function(model) {
-		var p = model
-					.findAll({where: ["usn > ?", req.query.afterUsn]})
-					.then(function(models) {
-						var hash = {}
-						hash[model.name] = models
-						return hash
+	// if(! req.query.maxCount ) {
+	// 	return res.json403("maxCount required")
+	// }
+	var json = {models: {}}
+	var highestUsn = -1
+	var afterUsn = parseInt(req.query.afterUsn)
+	usnGenerator.currentHighest().then(function(currentHighestUsn) {
+		if(currentHighestUsn <= afterUsn) {
+			console.log("No new data to send to client")
+			return res.status(204).end()
+		}
+		else {
+			var allModels = Models.allSequencedModelDefinitions()
+			return Promise.map(allModels, function(model) {
+				var p = model
+							.findAll({where: ["usn > ?", afterUsn]})
+							.then(function(models) {
+								var hash = {}
+								//hash[model.name] = models
+								hash[model.name] = []
+								Promise.map(models, function(model) {
+									console.log("PAY ATTENTION:", model)
+									if(model.usn > highestUsn) {
+										highestUsn = model.usn
+									}
+									return model.promiseJson(function(json) {
+										console.log("FUCK", json)
+										hash[model.name].push(json)
+									})
+								})
+							})
+				return p
+			}).each(function(chunk) {
+				for (var key in chunk) {
+		    		if (chunk.hasOwnProperty(key)) {
+						json.models[key] = chunk[key]
+					}
+				}
+			}).then(function() {
+				json.timestamp = Math.floor(Date.now() / 1000)
+				console.log("Highest USN was scanned as:", highestUsn)
+				if (highestUsn == -1) {
+					usnGenerator.currentHighest().then(function(usn) {
+						console.log("Got highest usn", usn)
+						json.highestUsn = usn
+						return res.status(200).json(json)
 					})
 		return p
 	}).each(function(chunk) {

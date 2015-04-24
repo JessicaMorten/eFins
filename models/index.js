@@ -38,7 +38,11 @@ var _setupUsnHooks = function(modeldef) {
     //Set up hooks here
     if(shouldApply) {
       usnGenerator.setupHooks(modeldef);
-      _allSequencedModelDefinitions.push(modeldef);
+      // **************** TE<P TEST REMOVE ME!!!! ***************
+      if(modeldef.name === "User") {
+        // END REMOVE
+        _allSequencedModelDefinitions.push(modeldef);
+      }
     }
     return modeldef
   })

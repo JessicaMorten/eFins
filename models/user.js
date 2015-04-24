@@ -140,7 +140,26 @@ module.exports = function(sequelize, DataTypes) {
       },
       isAllowed: function userIsAllowed() {
         return this.approved && this.emailConfirmed;
-      } 
+      },
+      promiseJson: function() {
+        var json = this.get()
+        delete json.hash
+        delete json.secretToken
+        delete json.emailConfirmed
+        delete json.approved
+        var user = this
+        return user.getActivities(null, {raw: true})
+                   .then(function(actIds) {
+                    json.activities = actIds
+                   })
+                   .then(function() {
+                      return user.getPatrolLogs(null, {raw: true})
+                      .then(function(plIds) {
+                        json.patrolLogs = plIds
+                        return json
+                      })
+                   })
+      }
     }
   }, {
     paranoid: true
