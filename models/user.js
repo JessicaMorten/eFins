@@ -150,9 +150,7 @@ module.exports = function(sequelize, DataTypes) {
         var user = this
         return user.getActivities(null, {raw: true})
                    .then(function(actIds) {
-                    json.activities = actIds
-                   })
-                   .then(function() {
+                      json.activities = actIds
                       return user.getPatrolLogs(null, {raw: true})
                       .then(function(plIds) {
                         json.patrolLogs = plIds

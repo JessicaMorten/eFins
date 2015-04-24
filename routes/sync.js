@@ -4,6 +4,7 @@ var router = express.Router();
 var ResAjax = require('../helpers/resajax')
 var Models = require('../models')
 var Promise = require('bluebird')
+var usnGenerator = require('../helpers/usnGenerator')
 
 router.use( function(req, res, next) {
     res.json403 = ResAjax.err403
@@ -38,24 +39,18 @@ router.get('/sync', function(req, res, next) {
 		else {
 			var allModels = Models.allSequencedModelDefinitions()
 			return Promise.map(allModels, function(model) {
-				var p = model
-							.findAll({where: ["usn > ?", afterUsn]})
+				return model.findAll({where: ["usn > ?", afterUsn]})
+							.map(function(model) {
+								if(model.usn > highestUsn) {
+								 	highestUsn = model.usn
+								}
+								return model.promiseJson()
+							})
 							.then(function(models) {
 								var hash = {}
-								//hash[model.name] = models
-								hash[model.name] = []
-								Promise.map(models, function(model) {
-									console.log("PAY ATTENTION:", model)
-									if(model.usn > highestUsn) {
-										highestUsn = model.usn
-									}
-									return model.promiseJson(function(json) {
-										console.log("FUCK", json)
-										hash[model.name].push(json)
-									})
-								})
+								hash[model.name] = models
+								return hash
 							})
-				return p
 			}).each(function(chunk) {
 				for (var key in chunk) {
 		    		if (chunk.hasOwnProperty(key)) {
@@ -71,15 +66,12 @@ router.get('/sync', function(req, res, next) {
 						json.highestUsn = usn
 						return res.status(200).json(json)
 					})
-		return p
-	}).each(function(chunk) {
-		for (var key in chunk) {
-    		if (chunk.hasOwnProperty(key)) {
-				json[key] = chunk[key]
-			}
+				} else {
+					json.highestUsn = highestUsn
+					return res.status(200).json(json);
+				}
+			})
 		}
-	}).then(function() {
-		return res.status(200).json(json);
 	})
 })
 
