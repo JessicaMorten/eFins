@@ -8,9 +8,9 @@ var initialize = function(passed_sequelize) {
 	return sequelize.query("CREATE SEQUENCE usnGenerator", { type: Sequelize.QueryTypes.CREATE}).catch(function(e) {
 		if(_isntAlreadyPresentError(e)) {
 			throw e
-		} else {
-			console.log("usnGenerator sequence already present in database")
-		}
+		} //else {
+			//console.log("usnGenerator sequence already present in database")
+		//}
 	});
 }
 
@@ -19,7 +19,7 @@ var currentHighest = function () {
 		throw new Error("UsnGenerator currentHighest() called before initialization")
 	}
 	return sequelize.query("SELECT * FROM usnGenerator").spread( function(results, metadata) {
-		return(results[0]['lastvalue']);
+		return(parseInt(results[0]['last_value'] - 1));
 	});
 }
 
@@ -28,7 +28,7 @@ var getNext = function () {
 		throw new Error("UsnGenerator getNext() called before initialization")
 	}
 	return sequelize.query("SELECT nextval('usnGenerator')").spread( function(results, metadata) {
-		return(results[0]['nextval']);
+		return( parseInt(results[0]['nextval']) );
 	});
 }
 
@@ -46,7 +46,7 @@ var setupHooks = function(modeldef) {
 }
 
 var _applyUpdatedUsn = function (instance, options, fn) {
-	console.log("running _applyUpdateUsn")
+	//console.log("running _applyUpdateUsn")
 	getNext().then(function(nextUsn) {
 		instance.usn = nextUsn;
 		fn(null, instance);

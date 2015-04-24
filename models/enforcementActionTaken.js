@@ -3,7 +3,7 @@
 module.exports = function(sequelize, DataTypes) {
   var EnforcementActionTaken = sequelize.define("EnforcementActionTaken", {
     usn: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       //allowNull: false,
       unique: true//,
       // validate: {

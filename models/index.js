@@ -26,8 +26,8 @@ Promise.promisifyAll(fs)
 var _setupUsnHooks = function(modeldef) {
   return modeldef.describe()
   .then(function (descHash) {
-    if(! descHash.usn && (modeldef.name != "Session")) {
-      throw new Error("Model definition for " + modeldef.name + " does not contain a USN property.  Define one.")
+    if((! descHash.usn) && (modeldef.name != "Session")) {
+      throw new Error("Model definition for " + modeldef.name + " does not contain a USN property.  Define one." + JSON.stringify(descHash, null, 4))
     }
     if (modeldef.name === "Session") {
       return false

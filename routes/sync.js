@@ -41,6 +41,7 @@ router.get('/sync', function(req, res, next) {
 			return Promise.map(allModels, function(model) {
 				return model.findAll({where: ["usn > ?", afterUsn]})
 							.map(function(model) {
+								console.log(model)
 								if(model.usn > highestUsn) {
 								 	highestUsn = model.usn
 								}

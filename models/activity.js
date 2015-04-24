@@ -7,7 +7,7 @@ module.exports = function(sequelize, DataTypes) {
       values: ['cdfwCommercialBoardingCard', 'npsRecreationalBoardingCard', 'activityLog']
     },
     usn: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       //allowNull: false,
       unique: true//,
       // validate: {

@@ -15,7 +15,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING
     },
     usn: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       //allowNull: false,
       unique: true//,
       // validate: {

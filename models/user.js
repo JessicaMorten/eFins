@@ -11,7 +11,7 @@ var randomToken = function() {
 module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define("User", {
     usn: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       //allowNull: false,
       unique: true//,
       // validate: {
@@ -141,6 +141,7 @@ module.exports = function(sequelize, DataTypes) {
       isAllowed: function userIsAllowed() {
         return this.approved && this.emailConfirmed;
       },
+
       promiseJson: function() {
         var json = this.get()
         delete json.hash
