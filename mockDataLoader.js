@@ -124,7 +124,10 @@ Models.sequelize
 			return Models.Activity.create({
 				type: "cdfwCommercialBoardingCard",
 				time: new Date(),
-				remarks: "It was stunning"
+				remarks: "It was stunning",
+				latitude: 35.0,
+				longitude: -119.8,
+				locationManuallyEntered: false
 			}).then(function(act) {
 				return Promise.join(act.addUser(trbuser), act.setPatrolLog(plog), act.save())
 			})
