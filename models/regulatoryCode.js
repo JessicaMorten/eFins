@@ -1,4 +1,5 @@
 "use strict";
+Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var RegulatoryCode = sequelize.define("RegulatoryCode", {
@@ -21,7 +22,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     instanceMethods: {
-      
+     
     }
   }, {
     paranoid: true,

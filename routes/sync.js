@@ -5,6 +5,7 @@ var ResAjax = require('../helpers/resajax')
 var Models = require('../models')
 var Promise = require('bluebird')
 var usnGenerator = require('../helpers/usnGenerator')
+var Sequelize = require("sequelize");
 
 router.use( function(req, res, next) {
     res.json403 = ResAjax.err403
@@ -38,21 +39,23 @@ router.get('/sync', function(req, res, next) {
 		}
 		else {
 			var allModels = Models.allSequencedModelDefinitions()
+			
+			//console.log(allModels)
+			
 			return Promise.map(allModels, function(model) {
-				var p = model
-							.findAll({where: ["usn > ?", afterUsn]})
+				return model.findAll({where: ["usn > ?", afterUsn]})
+							.map(function(model) {
+								
+								if(model.usn > highestUsn) {
+								 	highestUsn = model.usn
+								}
+								return model.toJSON()
+							})
 							.then(function(models) {
 								var hash = {}
 								hash[model.name] = models
-								models.forEach(function(model) {
-									console.log("PAY ATTENTION:", model)
-									if(model.usn > highestUsn) {
-										highestUsn = model.usn
-									}
-								})
 								return hash
 							})
-				return p
 			}).each(function(chunk) {
 				for (var key in chunk) {
 		    		if (chunk.hasOwnProperty(key)) {
@@ -66,11 +69,15 @@ router.get('/sync', function(req, res, next) {
 					usnGenerator.currentHighest().then(function(usn) {
 						console.log("Got highest usn", usn)
 						json.highestUsn = usn
-						return res.status(200).json(json)
+						serializeRelations(json).then(function(newJson) {
+							return res.status(200).json(newJson);
+						})
 					})
 				} else {
 					json.highestUsn = highestUsn
-					return res.status(200).json(json);
+					serializeRelations(json).then(function(newJson) {
+						return res.status(200).json(newJson);
+					})
 				}
 			})
 		}
@@ -83,6 +90,47 @@ router.post('/sync', function(req, res, next) {
 	return res.status(200).json(json);
 
 })
+
+var serializeRelations = function(json) {
+	json.relations = {}
+	var queryPromises = []
+	var allModels = Models.sequelize.models
+	Object.keys(allModels).forEach(function(k) {
+		var m = allModels[k]
+		if(Object.keys(m.associations).length == 0) {
+			return 
+		}
+		//console.log(m.associations)
+		Object.keys(m.associations).forEach(function(a) {
+			var body = m.associations[a]
+			//console.log(body.throughModel)
+			if(! /BelongsToMany/.test(body.associationType)) {return}
+			if(json.relations[k] === undefined) {json.relations[k] = {}}
+			json.relations[k][a] = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name}
+			if (body.associationType === 'BelongsToMany') {
+				var tableName = body.throughModel.options.through
+				json.relations[k][a].tableName = tableName
+				queryPromises.push( Models.sequelize.query("SELECT * FROM \"" + tableName + "\";", {type: Models.sequelize.QueryTypes.SELECT})
+						     .then(function(assocIds) {
+						     	assocIds.forEach(function(i) {
+						     		delete i.createdAt
+						     		delete i.updatedAt
+						     	})
+						     	json.relations[k][a].idmap = assocIds
+						     	return null
+						     })
+				)
+			} 
+			//console.log(a, body.associationType, body.source.name, body.target.name)
+		})
+	})
+	//console.log(JSON.stringify(json, null, 4))
+	return Promise.all(queryPromises).then(function() {
+		console.log(JSON.stringify(json, null, 4))
+		return json	
+	})
+	
+}
 
 
 module.exports = router

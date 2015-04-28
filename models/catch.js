@@ -1,4 +1,5 @@
 "use strict";
+Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var Catch = sequelize.define("Catch", {
@@ -18,7 +19,7 @@ module.exports = function(sequelize, DataTypes) {
       apiSetup: apiSetup,
       associate: function(models) {
         this.belongsTo(models.Species);
-        this.hasOne(models.Activity);
+        this.belongsTo(models.Activity);
       }
     },
     instanceMethods: {

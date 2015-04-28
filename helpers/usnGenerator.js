@@ -8,9 +8,9 @@ var initialize = function(passed_sequelize) {
 	return sequelize.query("CREATE SEQUENCE usnGenerator", { type: Sequelize.QueryTypes.CREATE}).catch(function(e) {
 		if(_isntAlreadyPresentError(e)) {
 			throw e
-		} else {
-			console.log("usnGenerator sequence already present in database")
-		}
+		} //else {
+			//console.log("usnGenerator sequence already present in database")
+		//}
 	});
 }
 

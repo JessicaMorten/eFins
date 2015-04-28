@@ -71,7 +71,7 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         // associations can be defined here
         models.User.belongsToMany(models.Activity, {through: "Activity2User"});
-        models.User.belongsToMany(models.PatrolLog, {through: "PatrolLog2User"});
+        models.User.hasMany(models.PatrolLog);
         models.User.belongsTo(models.Agency);
       },
       register: function(opts, next) {
@@ -141,6 +141,7 @@ module.exports = function(sequelize, DataTypes) {
       isAllowed: function userIsAllowed() {
         return this.approved && this.emailConfirmed;
       },
+
       toJSON: function() {
         var json = this.get()
         delete json.hash

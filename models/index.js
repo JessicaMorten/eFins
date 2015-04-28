@@ -59,6 +59,7 @@ db.init = function() {
       }
       return model
     }).then(function(models) {
+      //console.log(sequelize)
       return sequelize.sync().then(function(){ return models})
     })
     .map(function(model) {

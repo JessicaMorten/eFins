@@ -1,4 +1,5 @@
 "use strict";
+Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var PatrolLog = sequelize.define("PatrolLog", {
@@ -86,15 +87,15 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.hasOne(models.User);
-        this.hasOne(models.AgencyVessel, {through: "PatrolLog2AgencyVessel"});
+        this.belongsTo(models.User);
+        this.belongsTo(models.AgencyVessel);
         this.hasOne(models.Port);
         this.belongsToMany(models.FreeTextCrew, {through: "FreeTextCrew2PatrolLog"});
-        this.belongsToMany(models.Activity, {through: "Activity2PatrolLog"});
+        this.hasMany(models.Activity);
       }
     },
     instanceMethods: {
-      
+     
     }
   }, {
     paranoid: true,

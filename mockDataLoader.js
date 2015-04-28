@@ -1,11 +1,19 @@
 "use strict";
+Error.stackTraceLimit = Infinity;
 var path = require('path');
 var logger = require('morgan');
 var sequelize = require('sequelize')
 var usnGenerator = require('./helpers/usnGenerator')
+var longjohn = require('longjohn')
 
 
 var Models = require('./models');
+
+
+var trbuser = null
+var nps = null
+var plog = null
+var boat = null
 
 
 Models.sequelize
@@ -22,18 +30,28 @@ Models.sequelize
 	Models.init().then(function() {
 	  	Models.initializeUsnGenerator()
 	  	.then(function() {
+	  	  return create_user()
+	  	})
+	  	.then(function() {
 		  return create_actions()
 		}).then(function(tmp_actions) {
 		  return create_agencies()
 		}).all().then(function(tmp_agencies) {
 			return create_agencyVessels(tmp_agencies)
-		}).then(function(tmp_agencyVessels) {
+		}).then(function() {
+			return create_patrolLogs()
+		}).then(function() {
+			console.log("Settin' some associations")
+			trbuser.setAgency(nps)
+			return trbuser.save()
+		}).then(function() {
 			process.exit()
 		})
 	})
 
 
 	var create_actions = function () {
+		console.log("Creatin' actions")
 		return Models.Action.create({
 			name: "Trolling"
 		}).then(function() {
@@ -49,13 +67,18 @@ Models.sequelize
 
 
 	var create_agencies = function () {
+		console.log("Creatin' agencies")
 		return [
 			Models.Agency.create({
 				name: "California Department of Fish and Wildlife"
 			}),
-			Models.Agency.create({
-				name: "National Park Service"
-			}),
+			function() {
+				var m = Models.Agency.build({
+					name: "National Park Service"
+				})
+				nps = m
+				return m.save()
+			}(),
 		    Models.Agency.create({
 				name: "US Coast Guard"
 			})
@@ -64,6 +87,7 @@ Models.sequelize
 
 
 	var create_agencyVessels = function (agencies) {
+		console.log("Creatin' agency vessels")
 		return Models.AgencyVessel.create({
 			name: "Swordfish"
 		}).then(function(tmp_vessel) {
@@ -80,7 +104,48 @@ Models.sequelize
 				})
 			})
 		}).then(function(tmp_vessel) {
+			boat = tmp_vessel
 			return tmp_vessel.setAgency(agencies[2])
 		})
+	}
+
+	var create_patrolLogs = function (agencies) {
+		console.log("Creatin' patrol logs")
+		return Models.PatrolLog.create({
+			date: new Date(),
+			wasClear: true,
+			outboardLoggedHours: 2
+		}).then(function(pl) {
+			pl.setUser(trbuser)
+			pl.setAgencyVessel(boat)
+			plog = pl
+			return pl.save()
+		}).then(function() {
+			return Models.Activity.create({
+				type: "cdfwCommercialBoardingCard",
+				time: new Date(),
+				remarks: "It was stunning"
+			}).then(function(act) {
+				return Promise.join(act.addUser(trbuser), act.setPatrolLog(plog), act.save())
+			})
+			
+		})
+	}
+
+	var create_user = function () {
+		console.log("Creatin' user")
+		var user = Models.User.build({
+			name: "Todd Bryan",
+			email: "todd.r.bryan@gmail.com",
+			approved: true,
+			emailConfirmed: true
+		})
+
+		user.setpw = Promise.promisify(user.setPassword)
+
+		trbuser = user
+
+		return user.setpw('bobobobo').then(function() {user.save()})
+		
 	}
 });
