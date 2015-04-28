@@ -1,14 +1,19 @@
 "use strict";
+Error.stackTraceLimit = Infinity;
 var path = require('path');
 var logger = require('morgan');
 var sequelize = require('sequelize')
 var usnGenerator = require('./helpers/usnGenerator')
+var longjohn = require('longjohn')
 
 
 var Models = require('./models');
 
 
 var trbuser = null
+var nps = null
+var plog = null
+var boat = null
 
 
 Models.sequelize
@@ -33,10 +38,14 @@ Models.sequelize
 		  return create_agencies()
 		}).all().then(function(tmp_agencies) {
 			return create_agencyVessels(tmp_agencies)
-		}).then(function(tmp_agencyVessels) {
-			process.exit()
 		}).then(function() {
-			trbuser.setAgency(1)
+			return create_patrolLogs()
+		}).then(function() {
+			console.log("Settin' some associations")
+			trbuser.setAgency(nps)
+			return trbuser.save()
+		}).then(function() {
+			process.exit()
 		})
 	})
 
@@ -63,9 +72,13 @@ Models.sequelize
 			Models.Agency.create({
 				name: "California Department of Fish and Wildlife"
 			}),
-			Models.Agency.create({
-				name: "National Park Service"
-			}),
+			function() {
+				var m = Models.Agency.build({
+					name: "National Park Service"
+				})
+				nps = m
+				return m.save()
+			}(),
 		    Models.Agency.create({
 				name: "US Coast Guard"
 			})
@@ -91,29 +104,31 @@ Models.sequelize
 				})
 			})
 		}).then(function(tmp_vessel) {
+			boat = tmp_vessel
 			return tmp_vessel.setAgency(agencies[2])
 		})
 	}
 
 	var create_patrolLogs = function (agencies) {
 		console.log("Creatin' patrol logs")
-		return Models.AgencyVessel.create({
-			name: "Swordfish"
-		}).then(function(tmp_vessel) {
-			return tmp_vessel.setAgency(agencies[0]).then(function() {
-				return Models.AgencyVessel.create({
-					name: "Ocean Ranger"
-				})
+		return Models.PatrolLog.create({
+			date: new Date(),
+			wasClear: true,
+			outboardLoggedHours: 2
+		}).then(function(pl) {
+			pl.setUser(trbuser)
+			pl.setAgencyVessel(boat)
+			plog = pl
+			return pl.save()
+		}).then(function() {
+			return Models.Activity.create({
+				type: "cdfwCommercialBoardingCard",
+				time: new Date(),
+				remarks: "It was stunning"
+			}).then(function(act) {
+				return Promise.join(act.addUser(trbuser), act.setPatrolLog(plog), act.save())
 			})
-			return 
-		}).then(function(tmp_vessel) {
-			return tmp_vessel.setAgency(agencies[1]).then(function() {
-				return Models.AgencyVessel.create({
-					name: "Blackfin"
-				})
-			})
-		}).then(function(tmp_vessel) {
-			return tmp_vessel.setAgency(agencies[2])
+			
 		})
 	}
 

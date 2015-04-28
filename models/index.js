@@ -38,11 +38,7 @@ var _setupUsnHooks = function(modeldef) {
     //Set up hooks here
     if(shouldApply) {
       usnGenerator.setupHooks(modeldef);
-      // **************** TE<P TEST REMOVE ME!!!! ***************
-      if(modeldef.name === "User") {
-        // END REMOVE
-        _allSequencedModelDefinitions.push(modeldef);
-      }
+      _allSequencedModelDefinitions.push(modeldef);
     }
     return modeldef
   })
@@ -63,6 +59,7 @@ db.init = function() {
       }
       return model
     }).then(function(models) {
+      //console.log(sequelize)
       return sequelize.sync().then(function(){ return models})
     })
     .map(function(model) {

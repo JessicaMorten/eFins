@@ -71,7 +71,7 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         // associations can be defined here
         models.User.belongsToMany(models.Activity, {through: "Activity2User"});
-        models.User.belongsToMany(models.PatrolLog, {through: "PatrolLog2User"});
+        models.User.hasMany(models.PatrolLog);
         models.User.belongsTo(models.Agency);
       },
       register: function(opts, next) {
@@ -142,22 +142,13 @@ module.exports = function(sequelize, DataTypes) {
         return this.approved && this.emailConfirmed;
       },
 
-      promiseJson: function() {
+      toJSON: function() {
         var json = this.get()
         delete json.hash
         delete json.secretToken
         delete json.emailConfirmed
         delete json.approved
-        var user = this
-        return user.getActivities(null, {raw: true})
-                   .then(function(actIds) {
-                      json.activities = actIds
-                      return user.getPatrolLogs(null, {raw: true})
-                      .then(function(plIds) {
-                        json.patrolLogs = plIds
-                        return json
-                      })
-                   })
+        return json
       }
     }
   }, {

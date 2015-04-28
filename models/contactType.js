@@ -1,5 +1,5 @@
 "use strict";
-
+Promise = require('bluebird')
 module.exports = function(sequelize, DataTypes) {
   var ContactType = sequelize.define("ContactType", {
     name: {
@@ -21,7 +21,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     instanceMethods: {
-      
+       
     }
   }, {
     paranoid: true,

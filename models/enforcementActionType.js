@@ -1,4 +1,5 @@
 "use strict";
+Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var EnforcementActionType = sequelize.define("EnforcementActionType", {

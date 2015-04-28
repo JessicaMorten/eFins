@@ -1,4 +1,5 @@
 "use strict";
+Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var Activity = sequelize.define("Activity", {
@@ -35,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         this.belongsToMany(models.FreeTextCrew, {through: "Activity2FreeTextCrew"});
         this.belongsToMany(models.User, {through: "Activity2User"});
-        this.belongsTo(models.Catch);
+        this.hasMany(models.Catch);
         this.hasOne(models.Port);
         this.hasOne(models.Vessel);
         this.belongsTo(models.Fishery);
@@ -46,7 +47,7 @@ module.exports = function(sequelize, DataTypes) {
         this.hasMany(models.Photo)
         this.belongsToMany(models.EnforcementActionTaken, {as: 'enforcementActionsTaken', through: "Activity2EnforcementActionTaken"})
         this.belongsTo(models.ContactType)
-        this.belongsTo(models.PatrolLog, {through: "Activity2PatrolLog"})
+        this.belongsTo(models.PatrolLog)
       }
     },
     instanceMethods: {
