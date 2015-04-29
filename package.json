@@ -12,7 +12,7 @@
     "test": "bin/test"
   },
   "dependencies": {
-    "bcrypt": "^0.8.1",
+    "bcryptjs": "^2.1.0",
     "bluebird": "^2.9.14",
     "body-parser": "~1.8.1",
     "cheerio": "^0.18.0",
