@@ -105,18 +105,19 @@ var serializeRelations = function(json) {
 			var body = m.associations[a]
 			//console.log(body.throughModel)
 			if(! /BelongsToMany/.test(body.associationType)) {return}
-			if(json.relations[k] === undefined) {json.relations[k] = {}}
-			json.relations[k][a] = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name}
+			//if(json.relations[k] === undefined) {json.relations[k] = {}}
+		    var uniqueA = "Model_" + k + "_Assoc_" + a
+			json.relations[uniqueA] = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name}
 			if (body.associationType === 'BelongsToMany') {
 				var tableName = body.throughModel.options.through
-				json.relations[k][a].tableName = tableName
+				json.relations[uniqueA].tableName = tableName
 				queryPromises.push( Models.sequelize.query("SELECT * FROM \"" + tableName + "\";", {type: Models.sequelize.QueryTypes.SELECT})
 						     .then(function(assocIds) {
 						     	assocIds.forEach(function(i) {
 						     		delete i.createdAt
 						     		delete i.updatedAt
 						     	})
-						     	json.relations[k][a].idmap = assocIds
+						     	json.relations[uniqueA].idmap = assocIds
 						     	return null
 						     })
 				)
