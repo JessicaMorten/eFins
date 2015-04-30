@@ -127,7 +127,8 @@ Models.sequelize
 				remarks: "It was stunning",
 				latitude: 35.0,
 				longitude: -119.8,
-				locationManuallyEntered: false
+				locationManuallyEntered: false,
+				numPersonsOnBoard: 3
 			}).then(function(act) {
 				return Promise.join(act.addUser(trbuser), act.setPatrolLog(plog), act.save())
 			})
