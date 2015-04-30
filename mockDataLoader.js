@@ -114,18 +114,18 @@ Models.sequelize
 		return Models.PatrolLog.create({
 			date: new Date(),
 			wasClear: true,
-			outboardLoggedHours: 2,
-			fuelToDate: 4.3,
-			fuelPurchased: 5.3,
-			lubeOil: 93.2,
-			portHoursBroughtForward: 92.2,
-			starboardHoursBroughtForward: 83.2,
-			portLoggedHours: 2.3,
-			starboardLoggedHours: 2.3,
-			generatorHoursBroughtForward: 2.3,
-			generatorLoggedHours: 83.2,
-			outboardHoursBroughtForward: 0.5,
-			freeTextOthersAboard: "dsdsd"
+			fuelToDate: 32.4,
+			fuelPurchased: 3232.2,
+			lubeOil: 882.2,
+			portHoursBroughtForward: 39.7,
+			starboardHoursBroughtForward: 3232.6,
+			portLoggedHours: 455.4,
+			starboardLoggedHours: 4343.3,
+			generatorHoursBroughtForward: 433.3,
+			generatorLoggedHours: 22.2,
+			outboardHoursBroughtForward: 44.4,
+			freeTextOthersAboard: "Simon",
+			outboardLoggedHours: 2
 		}).then(function(pl) {
 			pl.setUser(trbuser)
 			pl.setAgencyVessel(boat)
@@ -138,7 +138,8 @@ Models.sequelize
 				remarks: "It was stunning",
 				latitude: 35.0,
 				longitude: -119.8,
-				locationManuallyEntered: false
+				locationManuallyEntered: false,
+				numPersonsOnBoard: 3
 			}).then(function(act) {
 				return Promise.join(act.addUser(trbuser), act.setPatrolLog(plog), act.save())
 			})

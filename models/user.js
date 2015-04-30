@@ -1,5 +1,5 @@
 "use strict";
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 var crypto = require('crypto');
 var absUrl = require('../absoluteUrl.js');
 var emailer = require('../email.js');
