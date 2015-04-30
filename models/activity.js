@@ -5,7 +5,7 @@ module.exports = function(sequelize, DataTypes) {
   var Activity = sequelize.define("Activity", {
     type: {
       type:   DataTypes.ENUM,
-      values: ['cdfwCommercialBoardingCard', 'npsRecreationalBoardingCard', 'activityLog']
+      values: ['cdfwCommercialBoardingCard', 'cdfwRecreationalBoardingCard', 'npsContactCard', 'activityLog']
     },
     usn: {
       type: DataTypes.INTEGER,
@@ -29,6 +29,9 @@ module.exports = function(sequelize, DataTypes) {
     },
     locationManuallyEntered: {
       type: DataTypes.BOOLEAN
+    },
+    numPersonsOnBoard: {
+      type: DataTypes.INTEGER
     }
   }, {
     classMethods: {

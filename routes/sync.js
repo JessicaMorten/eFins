@@ -92,7 +92,7 @@ router.post('/sync', function(req, res, next) {
 })
 
 var serializeRelations = function(json) {
-	json.relations = {}
+	json.relations = []
 	var queryPromises = []
 	var allModels = Models.sequelize.models
 	Object.keys(allModels).forEach(function(k) {
@@ -100,32 +100,31 @@ var serializeRelations = function(json) {
 		if(Object.keys(m.associations).length == 0) {
 			return 
 		}
-		//console.log(m.associations)
 		Object.keys(m.associations).forEach(function(a) {
 			var body = m.associations[a]
-			//console.log(body.throughModel)
 			if(! /BelongsToMany/.test(body.associationType)) {return}
-			//if(json.relations[k] === undefined) {json.relations[k] = {}}
-		    var uniqueA = "Model_" + k + "_Assoc_" + a
-			json.relations[uniqueA] = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name}
+		    var as = body.options.name.plural
+			as = as.charAt(0).toLowerCase() + as.slice(1)
+			var rDescriptor = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name, as: as}
 			if (body.associationType === 'BelongsToMany') {
 				var tableName = body.throughModel.options.through
-				json.relations[uniqueA].tableName = tableName
+				rDescriptor.tableName = tableName
 				queryPromises.push( Models.sequelize.query("SELECT * FROM \"" + tableName + "\";", {type: Models.sequelize.QueryTypes.SELECT})
 						     .then(function(assocIds) {
 						     	assocIds.forEach(function(i) {
 						     		delete i.createdAt
 						     		delete i.updatedAt
 						     	})
-						     	json.relations[uniqueA].idmap = assocIds
+						     	rDescriptor.idmap = assocIds
+						     	json.relations.push(rDescriptor)
 						     	return null
 						     })
 				)
-			} 
-			//console.log(a, body.associationType, body.source.name, body.target.name)
+			} else {
+				json.relations.push(rDescriptor)
+			}
 		})
 	})
-	//console.log(JSON.stringify(json, null, 4))
 	return Promise.all(queryPromises).then(function() {
 		console.log(JSON.stringify(json, null, 4))
 		return json	
