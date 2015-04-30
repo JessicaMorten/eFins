@@ -114,7 +114,18 @@ Models.sequelize
 		return Models.PatrolLog.create({
 			date: new Date(),
 			wasClear: true,
-			outboardLoggedHours: 2
+			outboardLoggedHours: 2,
+			fuelToDate: 4.3,
+			fuelPurchased: 5.3,
+			lubeOil: 93.2,
+			portHoursBroughtForward: 92.2,
+			starboardHoursBroughtForward: 83.2,
+			portLoggedHours: 2.3,
+			starboardLoggedHours: 2.3,
+			generatorHoursBroughtForward: 2.3,
+			generatorLoggedHours: 83.2,
+			outboardHoursBroughtForward: 0.5,
+			freeTextOthersAboard: "dsdsd"
 		}).then(function(pl) {
 			pl.setUser(trbuser)
 			pl.setAgencyVessel(boat)

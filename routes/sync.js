@@ -109,6 +109,7 @@ var serializeRelations = function(json) {
 		    var uniqueA = "Model_" + k + "_Assoc_" + a
 			json.relations[uniqueA] = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name}
 			if (body.associationType === 'BelongsToMany') {
+				console.log(body)
 				var tableName = body.throughModel.options.through
 				json.relations[uniqueA].tableName = tableName
 				queryPromises.push( Models.sequelize.query("SELECT * FROM \"" + tableName + "\";", {type: Models.sequelize.QueryTypes.SELECT})

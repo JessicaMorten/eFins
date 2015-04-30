@@ -37,8 +37,8 @@ module.exports = function(sequelize, DataTypes) {
         this.belongsToMany(models.FreeTextCrew, {through: "Activity2FreeTextCrew"});
         this.belongsToMany(models.User, {through: "Activity2User"});
         this.hasMany(models.Catch);
-        this.hasOne(models.Port);
-        this.hasOne(models.Vessel);
+        this.belongsTo(models.Port);
+        this.belongsTo(models.Vessel);
         this.belongsTo(models.Fishery);
         this.belongsTo(models.Action);
         this.belongsTo(models.Person, {as: 'captain'});

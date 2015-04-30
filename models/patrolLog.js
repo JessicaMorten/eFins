@@ -89,7 +89,7 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         this.belongsTo(models.User);
         this.belongsTo(models.AgencyVessel);
-        this.hasOne(models.Port);
+        this.belongsTo(models.Port);
         this.belongsToMany(models.FreeTextCrew, {through: "FreeTextCrew2PatrolLog"});
         this.hasMany(models.Activity);
       }
