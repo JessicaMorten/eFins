@@ -114,6 +114,17 @@ Models.sequelize
 		return Models.PatrolLog.create({
 			date: new Date(),
 			wasClear: true,
+			fuelToDate: 32.4,
+			fuelPurchased: 3232.2,
+			lubeOil: 882.2,
+			portHoursBroughtForward: 39.7,
+			starboardHoursBroughtForward: 3232.6,
+			portLoggedHours: 455.4,
+			starboardLoggedHours: 4343.3,
+			generatorHoursBroughtForward: 433.3,
+			generatorLoggedHours: 22.2,
+			outboardHoursBroughtForward: 44.4,
+			freeTextOthersAboard: "Simon",
 			outboardLoggedHours: 2
 		}).then(function(pl) {
 			pl.setUser(trbuser)
