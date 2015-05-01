@@ -90,7 +90,7 @@ module.exports = function(sequelize, DataTypes) {
         this.belongsTo(models.User);
         this.belongsTo(models.AgencyVessel);
         this.belongsTo(models.Port, {as: "departurePort"});
-        this.belongsToMany(models.FreeTextCrew, {through: "FreeTextCrew2PatrolLog"});
+        this.belongsToMany(models.FreeTextCrew, {through: "FreeTextCrew2PatrolLog", as: "freeTextCrew"});
         this.hasMany(models.Activity);
       }
     },
