@@ -102,12 +102,13 @@ var serializeRelations = function(json) {
 		}
 		Object.keys(m.associations).forEach(function(a) {
 			var body = m.associations[a]
-			if(! /BelongsToMany/.test(body.associationType)) {return}
+			if(! /BelongsTo/.test(body.associationType)) {return}
 		    var as = body.options.name.plural
-			as = as.charAt(0).toLowerCase() + as.slice(1)
+			if(as) {
+				as = as.charAt(0).toLowerCase() + as.slice(1)
+			}
 			var rDescriptor = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name, as: as}
 			if (body.associationType === 'BelongsToMany') {
-				console.log(body)
 				var tableName = body.throughModel.options.through
 				rDescriptor.tableName = tableName
 				queryPromises.push( Models.sequelize.query("SELECT * FROM \"" + tableName + "\";", {type: Models.sequelize.QueryTypes.SELECT})
@@ -122,7 +123,19 @@ var serializeRelations = function(json) {
 						     })
 				)
 			} else {
-				json.relations.push(rDescriptor)
+				//console.log(body)
+				var tableName = body.source.tableName
+				var foreignKeyId = body.options.foreignKey
+				var query = "SELECT id,\"" + foreignKeyId + "\" FROM \"" + tableName + "\";"
+				console.log(query)
+				queryPromises.push(Models.sequelize.query(query, {type: Models.sequelize.QueryTypes.SELECT})
+						     .then(function(assocIds) {
+						     	rDescriptor.idmap = assocIds
+						     	rDescriptor.foreignKey = foreignKeyId
+						     	json.relations.push(rDescriptor)
+						     	return null
+						     })
+				)
 			}
 		})
 	})

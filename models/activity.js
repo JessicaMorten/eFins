@@ -37,7 +37,7 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsToMany(models.FreeTextCrew, {through: "Activity2FreeTextCrew"});
+        this.belongsToMany(models.FreeTextCrew, {through: "Activity2FreeTextCrew", as: "freeTextCrew"});
         this.belongsToMany(models.User, {through: "Activity2User"});
         this.hasMany(models.Catch);
         this.belongsTo(models.Port);
