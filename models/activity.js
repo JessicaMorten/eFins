@@ -39,7 +39,7 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         this.belongsToMany(models.FreeTextCrew, {through: "Activity2FreeTextCrew", as: "freeTextCrew"});
         this.belongsToMany(models.User, {through: "Activity2User"});
-        this.hasMany(models.Catch);
+        this.belongsToMany(models.Catch, {through: "Activity2Catch"});
         this.belongsTo(models.Port);
         this.belongsTo(models.Vessel);
         this.belongsTo(models.Fishery);
@@ -47,7 +47,7 @@ module.exports = function(sequelize, DataTypes) {
         this.belongsTo(models.Person, {as: 'captain'});
         this.belongsTo(models.Person, {as: 'person'});
         this.belongsToMany(models.Person, {as: 'crew', through: "Activity2Person"})
-        this.hasMany(models.Photo)
+        this.belongsToMany(models.Photo, {through: "Activity2Photos"})
         this.belongsToMany(models.EnforcementActionTaken, {as: 'enforcementActionsTaken', through: "Activity2EnforcementActionTaken"})
         this.belongsTo(models.ContactType)
         this.belongsTo(models.PatrolLog)
