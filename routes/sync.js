@@ -132,6 +132,8 @@ var serializeRelations = function(json) {
 						     .then(function(assocIds) {
 						     	rDescriptor.idmap = assocIds
 						     	rDescriptor.foreignKey = foreignKeyId
+						     	delete rDescriptor.as
+						     	rDescriptor.clientAssociationName = a.charAt(0).toLowerCase() + a.slice(1)
 						     	json.relations.push(rDescriptor)
 						     	return null
 						     })
