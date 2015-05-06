@@ -11,6 +11,14 @@ module.exports = function(sequelize, DataTypes) {
         notEmpty: true
       }
     },
+    code: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        notEmpty: true
+      }
+    },
     usn: {
       type: DataTypes.INTEGER,
       //allowNull: false,
