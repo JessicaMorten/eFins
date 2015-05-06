@@ -16,7 +16,6 @@ module.exports = function(sequelize, DataTypes) {
       apiSetup: apiSetup,
       associate: function(models) {
         this.belongsTo(models.ViolationType);
-        this.belongsTo(models.RegulatoryCode, {as: 'code'})
         this.belongsTo(models.EnforcementActionType)
         this.belongsToMany(models.Activity, {through: "Activity2EnforcementActionTaken"});
       }
