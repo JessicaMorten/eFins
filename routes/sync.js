@@ -181,9 +181,7 @@ var processNewAndModifiedObjects = function(json) {
 	Object.keys(json).forEach(modelName, function(objectList) {
 		console.log("processing incoming " + modelName)
 		var modelClass = Models[modelName]
-	}
-
-
+	})
 }
 
 
