@@ -106,7 +106,7 @@ Models.init().then(function() {
   // will print stacktrace
   if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
-      console.log('handled error');
+      console.log('handled error', err);
       if (err instanceof sequelize.ValidationError) {
         err.message = "Validation Error: ";
         err.message += err.errors.map(

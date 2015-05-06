@@ -6,6 +6,7 @@ var Models = require('../models')
 var Promise = require('bluebird')
 var usnGenerator = require('../helpers/usnGenerator')
 var Sequelize = require("sequelize");
+var passport = require('passport');
 
 router.use( function(req, res, next) {
     res.json403 = ResAjax.err403
@@ -17,7 +18,7 @@ router.use( function(req, res, next) {
 
 
 
-router.get('/sync', function(req, res, next) {
+router.get('/sync', passport.authenticate('token', { session: false }), function(req, res, next) {
 	// TODO validate each of these params
 	//TODO filter secret attributes out of models
 	if(! req.query.afterUsn ) {
@@ -84,10 +85,37 @@ router.get('/sync', function(req, res, next) {
 	})
 })
 
-router.post('/sync', function(req, res, next) {
-	var json = {}
+router.post('/sync', passport.authenticate('token', { session: false }), function(req, res, next) {
+	console.log(req)
+	var size = req.get('content-length')
+	var json = req.body
+	var nModels = 0
+	Object.keys(json.models).forEach(function(key) {
+		var arr = json.models[key]
+		nModels += arr.length
+	})
+	var q = {where: {id: req.user.userId}};
+  	Models.User.find(q).done(function(err, user) {
+  		if(err) {
+  			console.log(err)
+  			return res.json500(err)
+  		}
+  		if(!user) {
+  			console.log("WTF:", req.params.token)
+  			return res.json401()
+  		}
+		console.log("client " + user.email + " posted " + size + "KB of data containing " + nModels + " new or modified objects")
+		console.log("posted from " + req.params['user-agent'])
+		console.log(JSON.stringify(req.body, null, 4))
 
-	return res.status(200).json(json);
+		processNewAndModifiedObjects(json)
+		.then(function(e) {
+			return res.status(200).json({});
+		})
+		
+
+		
+	})
 
 })
 
@@ -146,6 +174,16 @@ var serializeRelations = function(json) {
 		return json	
 	})
 	
+}
+
+
+var processNewAndModifiedObjects = function(json) {
+	Object.keys(json).forEach(modelName, function(objectList) {
+		console.log("processing incoming " + modelName)
+		var modelClass = Models[modelName]
+	}
+
+
 }
 
 
