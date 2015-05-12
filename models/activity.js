@@ -21,6 +21,9 @@ module.exports = function(sequelize, DataTypes) {
     remarks: {
       type: DataTypes.STRING
     },
+    categoryOfBoarding: {
+      type: DataTypes.STRING
+    },
     latitude: {
       type: DataTypes.FLOAT
     },

@@ -139,7 +139,8 @@ Models.sequelize
 				latitude: 35.0,
 				longitude: -119.8,
 				locationManuallyEntered: false,
-				numPersonsOnBoard: 3
+				numPersonsOnBoard: 3,
+				categoryOfBoarding: "Engorged"
 			}).then(function(act) {
 				return Promise.join(act.addUser(trbuser), act.setPatrolLog(plog), act.save())
 			})

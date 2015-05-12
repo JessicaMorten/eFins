@@ -86,7 +86,7 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 })
 
 router.post('/sync', passport.authenticate('token', { session: false }), function(req, res, next) {
-	console.log(req)
+	//console.log(req)
 	var size = req.get('content-length')
 	var json = req.body
 	var nModels = 0
@@ -109,8 +109,10 @@ router.post('/sync', passport.authenticate('token', { session: false }), functio
 		console.log(JSON.stringify(req.body, null, 4))
 
 		processNewAndModifiedObjects(json)
-		.then(function(e) {
+		.then(function(json) {
 			return res.status(200).json({});
+		}).catch( function(e) {
+			return res.json500(e)
 		})
 		
 
@@ -155,7 +157,7 @@ var serializeRelations = function(json) {
 				var tableName = body.source.tableName
 				var foreignKeyId = body.options.foreignKey
 				var query = "SELECT id,\"" + foreignKeyId + "\" FROM \"" + tableName + "\";"
-				console.log(query)
+				//console.log(query)
 				queryPromises.push(Models.sequelize.query(query, {type: Models.sequelize.QueryTypes.SELECT})
 						     .then(function(assocIds) {
 						     	rDescriptor.idmap = assocIds
@@ -170,7 +172,7 @@ var serializeRelations = function(json) {
 		})
 	})
 	return Promise.all(queryPromises).then(function() {
-		console.log(JSON.stringify(json, null, 4))
+		//console.log(JSON.stringify(json, null, 4))
 		return json	
 	})
 	
@@ -179,10 +181,95 @@ var serializeRelations = function(json) {
 
 var processNewAndModifiedObjects = function(json) {
 
-	return Promise.map(Object.keys(json), function(key) {
-		var objectList = json[key]
-		console.log("processing incoming " + key)
-		var modelClass = Models[key]
+    var clientIdToServerModel = {}
+    return Models.sequelize.transaction().then(function(transaction) {
+		return Promise.map(Object.keys(json.models), function(key) {
+			var objectList = json.models[key]
+			console.log("processing incoming " + key)
+			var modelClass = Models[key]
+			var clientToServer = {}
+			return Promise.map(objectList, function(obj) {
+
+				var modified_obj = jsonNormalize(obj)
+				return modelClass
+						.findOrCreate({where: modified_obj}, {transaction: transaction})
+							.spread(function(model, created) {
+							//console.log(model, created)
+							if (obj.usn === -1) {
+								clientToServer[obj.id] = model
+							}
+							return model
+						})
+			}).then(function(models) {
+				var indexedModels = {}
+				models.forEach(function(m) {
+					console.log("Indexing " + key + " " + m.id)
+					indexedModels[m.id] = m
+				})
+				clientIdToServerModel[key] = clientToServer
+				//.console.log(clientToServer)
+				console.log("Indexed" + key)
+				return null
+			})
+		}).then( function() {
+			// Now, run through all the models and set associations.
+			return Promise.map(clientIdToServerModel, function(key) {
+				return Promise.map(clientIdToServerModel[key], function(model) {
+					return setAssociations(model, key, clientIdToServerModel, transaction)
+				})
+			})
+		}).then( function(s) {
+			//Suck-cess.  Commit & return the mapping of old clientIds to newly assigned server Ids
+			transaction.commit()
+			return clientIdToServerModel
+		})
+		.catch( function(e) {
+			console.log("Rolling back as a result of an error...", e, e.stack)
+			transaction.rollback()
+		})
+	})
+}
+
+var jsonNormalize = function(json) {
+	var newJson = JSON.parse(JSON.stringify(json))
+	newJson.createdAt = new Date(json.createdAt)
+	newJson.updatedAt = new Date(json.updatedAt)
+	// Remove any UDID-containing properties, because they are either client-assigned IDs or client foreign keys
+	Object.keys(json).forEach(function(key) {
+		//console.log("Inspecting " + key + " " + json[key])
+		if(/[0-9a-fA-F]+-/.test(json[key])) {
+			//console.log("Found " + key + " " + json[key])
+			delete newJson[key]
+		}
+	})
+	delete newJson.usn  // USN is NOT client-settable 
+	return newJson
+}
+
+
+var isAssociation = function(idString) {
+	if(/[0-9a-fA-F]+-/.test(idString)) {
+		if(idString != "id") {
+			console.log("ASSociation " + idString)
+			return true
+		}
+	}
+	return false
+}
+
+var setAssociations = function(model, modelType, clientIdToServerModel, transaction) {
+	return Promise.all(Object.keys(model), function(key) {
+		if(isAssociation(model[key])) {
+			var partialAssocName = key.charAt(0).toUpperCase + key.slice(1)
+			var methodName = "set" + key
+			var target = clientIdToServerModel[modelType][key]
+			if(!target) {
+				console.log("FUCK FUCK FUCK")
+				return null
+			}
+			return model[methodName](target, {transaction: transaction})
+		}
+		return null
 	})
 }
 
