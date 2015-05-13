@@ -189,7 +189,6 @@ var processNewAndModifiedObjects = function(json) {
 			var modelClass = Models[key]
 			var clientToServer = {}
 			return Promise.map(objectList, function(obj) {
-
 				var modified_obj = jsonNormalize(obj)
 				return modelClass
 						.findOrCreate({where: modified_obj}, {transaction: transaction})
@@ -208,24 +207,30 @@ var processNewAndModifiedObjects = function(json) {
 				})
 				clientIdToServerModel[key] = clientToServer
 				//.console.log(clientToServer)
-				console.log("Indexed" + key)
+				console.log("Indexed " + key)
 				return null
 			})
 		}).then( function() {
+			console.log("GFY", filteredIdMap(clientIdToServerModel))
 			// Now, run through all the models and set associations.
-			return Promise.map(clientIdToServerModel, function(key) {
-				return Promise.map(clientIdToServerModel[key], function(model) {
-					return setAssociations(model, key, clientIdToServerModel, transaction)
+			return Promise.each(Object.keys(clientIdToServerModel), function(key) {
+				console.log("G")
+				return Promise.each(Object.keys(clientIdToServerModel[key]), function(mid) {
+					console.log("F")
+					return setAssociations(clientIdToServerModel[key][mid], key, clientIdToServerModel, transaction)
 				})
 			})
 		}).then( function(s) {
 			//Suck-cess.  Commit & return the mapping of old clientIds to newly assigned server Ids
-			transaction.commit()
-			return clientIdToServerModel
-		})
-		.catch( function(e) {
+			return transaction.commit().then(function() {
+				return filteredIdMap(clientIdToServerModel)
+			})
+			
+		}, function(e) {
 			console.log("Rolling back as a result of an error...", e, e.stack)
 			transaction.rollback()
+			throw e
+
 		})
 	})
 }
@@ -256,9 +261,10 @@ var isAssociation = function(idString) {
 	}
 	return false
 }
-
+ 
 var setAssociations = function(model, modelType, clientIdToServerModel, transaction) {
-	return Promise.all(Object.keys(model), function(key) {
+	console.log("GODDAMN")
+	return Promise.map(Object.keys(model), function(key) {
 		if(isAssociation(model[key])) {
 			var partialAssocName = key.charAt(0).toUpperCase + key.slice(1)
 			var methodName = "set" + key
@@ -271,6 +277,17 @@ var setAssociations = function(model, modelType, clientIdToServerModel, transact
 		}
 		return null
 	})
+}
+
+var filteredIdMap = function(json) {
+	var map = {}
+	Object.keys(json).forEach(function(modelName) {
+		map[modelName] = {}
+		Object.keys(json[modelName]).forEach(function(mid) {
+			map[modelName][mid] = json[modelName][mid].id
+		})
+	})
+	return map
 }
 
 
