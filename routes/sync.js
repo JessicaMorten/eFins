@@ -189,7 +189,7 @@ var processNewAndModifiedObjects = function(json) {
 			var modelClass = Models[key]
 			var clientToServer = {}
 			return Promise.map(objectList, function(obj) {
-				var modified_obj = jsonNormalize(obj)
+				var modified_obj = jsonNormalize(obj, key)
 				return modelClass
 						.findOrCreate({where: modified_obj}, {transaction: transaction})
 							.spread(function(model, created) {
@@ -235,15 +235,28 @@ var processNewAndModifiedObjects = function(json) {
 	})
 }
 
-var jsonNormalize = function(json) {
+var jsonNormalize = function(json, modelClass) {
+	var associations = Models.sequelize.models[modelClass].associations
+	//console.log(associations)
+	var assocProperties = []
+	Object.keys(associations).forEach(function(key) {
+		var assoc = associations[key]
+		if(/BelongsTo/.test(assoc.associationType)) {
+			assocProperties.push(assoc.as)
+		}
+	})
+	console.log(assocProperties)
+
 	var newJson = JSON.parse(JSON.stringify(json))
 	newJson.createdAt = new Date(json.createdAt)
 	newJson.updatedAt = new Date(json.updatedAt)
-	// Remove any UDID-containing properties, because they are either client-assigned IDs or client foreign keys
+	if(/[0-9a-fA-F]+-/.test(json.id)) {
+		delete newJson.id
+	} 
 	Object.keys(json).forEach(function(key) {
 		//console.log("Inspecting " + key + " " + json[key])
-		if(/[0-9a-fA-F]+-/.test(json[key])) {
-			//console.log("Found " + key + " " + json[key])
+		if(key in assocProperties) {
+			console.log("Found & deleting" + key + " " + json[key])
 			delete newJson[key]
 		}
 	})
@@ -264,10 +277,21 @@ var isAssociation = function(idString) {
  
 var setAssociations = function(model, modelType, clientIdToServerModel, transaction) {
 	console.log("GODDAMN")
+	var associations = Models.sequelize.models[modelType].associations
+	Object.keys(associations).forEach(function(a) {
+		var body = associations[a]
+		if(! /BelongsTo/.test(body.associationType)) {return}
+		console.log("Handling association " + body.options.name.plural + "for " + modelType + " " + model.id)
+		var assocValue = model[body.options.name.plural]
+	})
+
+
+
 	return Promise.map(Object.keys(model), function(key) {
 		if(isAssociation(model[key])) {
 			var partialAssocName = key.charAt(0).toUpperCase + key.slice(1)
 			var methodName = "set" + key
+			console.log("Assoc Method Name:", methodName)
 			var target = clientIdToServerModel[modelType][key]
 			if(!target) {
 				console.log("FUCK FUCK FUCK")
