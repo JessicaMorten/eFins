@@ -110,7 +110,8 @@ router.post('/sync', passport.authenticate('token', { session: false }), functio
 
 		processNewAndModifiedObjects(json)
 		.then(function(json) {
-			return res.status(200).json({});
+			console.log("Darn!", json)
+			return res.status(200).json(json);
 		}).catch( function(e) {
 			return res.json500(e)
 		})
@@ -182,12 +183,14 @@ var serializeRelations = function(json) {
 var processNewAndModifiedObjects = function(json) {
 
     var clientIdToServerModel = {}
+    var modelIdToIncomingJson = {}
     return Models.sequelize.transaction().then(function(transaction) {
 		return Promise.map(Object.keys(json.models), function(key) {
 			var objectList = json.models[key]
 			console.log("processing incoming " + key)
 			var modelClass = Models[key]
 			var clientToServer = {}
+			var idToJson = {}
 			return Promise.map(objectList, function(obj) {
 				var modified_obj = jsonNormalize(obj, key)
 				return modelClass
@@ -197,6 +200,7 @@ var processNewAndModifiedObjects = function(json) {
 							if (obj.usn === -1) {
 								clientToServer[obj.id] = model
 							}
+							idToJson[model.id] = obj
 							return model
 						})
 			}).then(function(models) {
@@ -206,23 +210,23 @@ var processNewAndModifiedObjects = function(json) {
 					indexedModels[m.id] = m
 				})
 				clientIdToServerModel[key] = clientToServer
+				modelIdToIncomingJson[key] = idToJson
 				//.console.log(clientToServer)
-				console.log("Indexed " + key)
+				//console.log("Indexed " + key)
 				return null
 			})
 		}).then( function() {
-			console.log("GFY", filteredIdMap(clientIdToServerModel))
 			// Now, run through all the models and set associations.
 			return Promise.each(Object.keys(clientIdToServerModel), function(key) {
-				console.log("G")
 				return Promise.each(Object.keys(clientIdToServerModel[key]), function(mid) {
-					console.log("F")
-					return setAssociations(clientIdToServerModel[key][mid], key, clientIdToServerModel, transaction)
+					//console.log("By GEORGE!!!!!! " , modelIdToIncomingJson)
+					return setAssociations(clientIdToServerModel[key][mid], key, clientIdToServerModel, modelIdToIncomingJson, transaction)
 				})
 			})
 		}).then( function(s) {
 			//Suck-cess.  Commit & return the mapping of old clientIds to newly assigned server Ids
-			return transaction.commit().then(function() {
+			return transaction.rollback().then(function() {
+				console.log(filteredIdMap(clientIdToServerModel))
 				return filteredIdMap(clientIdToServerModel)
 			})
 			
@@ -235,28 +239,62 @@ var processNewAndModifiedObjects = function(json) {
 	})
 }
 
-var jsonNormalize = function(json, modelClass) {
+
+var getAssocationProperties = function(modelClass) {
 	var associations = Models.sequelize.models[modelClass].associations
 	//console.log(associations)
 	var assocProperties = []
 	Object.keys(associations).forEach(function(key) {
 		var assoc = associations[key]
 		if(/BelongsTo/.test(assoc.associationType)) {
-			assocProperties.push(assoc.as)
+			var trueAssocName = assoc.as.charAt(0).toLowerCase() + assoc.as.slice(1)
+			assocProperties.push(trueAssocName)
 		}
 	})
-	console.log(assocProperties)
+	return assocProperties
 
+}
+
+var findAssociationByAsName = function(as, modelClass) {
+	var normalizedAsParameter = as.toLowerCase() 
+	//console.log("searchin for " + normalizedAsParameter)
+	var associations = Models.sequelize.models[modelClass].associations
+	var assocName = ""
+	for(assocName of Object.keys(associations)) {
+		//console.log(assocName, Object.keys(associations))
+		var assoc = associations[assocName]
+		//console.log("comparing to " + assoc.as.toLowerCase())
+		var compareTo = assoc.as.toLowerCase()
+		if(!((compareTo < normalizedAsParameter) || (compareTo > normalizedAsParameter))) {
+			return assoc
+		}
+	}
+	return null
+}
+
+var isPlural = function(assoc) {
+	if(String(assoc.associationType) === String("BelongsToMany")) {
+		return true
+	} 
+	return false
+}
+
+var isAClientId = function(id) {
+	return /[0-9a-fA-F]+-/.test(id)
+}
+
+var jsonNormalize = function(json, modelClass) {
+	var assocProperties = getAssocationProperties(modelClass)
 	var newJson = JSON.parse(JSON.stringify(json))
 	newJson.createdAt = new Date(json.createdAt)
 	newJson.updatedAt = new Date(json.updatedAt)
-	if(/[0-9a-fA-F]+-/.test(json.id)) {
+	if(isAClientId(json.id)) {
 		delete newJson.id
 	} 
 	Object.keys(json).forEach(function(key) {
 		//console.log("Inspecting " + key + " " + json[key])
-		if(key in assocProperties) {
-			console.log("Found & deleting" + key + " " + json[key])
+		if(assocProperties.indexOf(key) != -1) {
+			//console.log("Found & deleting " + key + " " + json[key])
 			delete newJson[key]
 		}
 	})
@@ -264,42 +302,45 @@ var jsonNormalize = function(json, modelClass) {
 	return newJson
 }
 
-
-var isAssociation = function(idString) {
-	if(/[0-9a-fA-F]+-/.test(idString)) {
-		if(idString != "id") {
-			console.log("ASSociation " + idString)
-			return true
-		}
-	}
-	return false
-}
  
-var setAssociations = function(model, modelType, clientIdToServerModel, transaction) {
-	console.log("GODDAMN")
+var setAssociations = function(model, modelType, clientIdToServerModel, idToJson, transaction) {
 	var associations = Models.sequelize.models[modelType].associations
-	Object.keys(associations).forEach(function(a) {
-		var body = associations[a]
-		if(! /BelongsTo/.test(body.associationType)) {return}
-		console.log("Handling association " + body.options.name.plural + "for " + modelType + " " + model.id)
-		var assocValue = model[body.options.name.plural]
-	})
+	var assocProperties = getAssocationProperties(modelType)
+	//console.log(associations)
 
-
-
-	return Promise.map(Object.keys(model), function(key) {
-		if(isAssociation(model[key])) {
-			var partialAssocName = key.charAt(0).toUpperCase + key.slice(1)
-			var methodName = "set" + key
-			console.log("Assoc Method Name:", methodName)
-			var target = clientIdToServerModel[modelType][key]
-			if(!target) {
-				console.log("FUCK FUCK FUCK")
+	return Promise.map(assocProperties, function(key) {
+		var partialAssocName = key.charAt(0).toUpperCase() + key.slice(1)
+		var methodName = "set" + partialAssocName
+		//console.log("Assoc Method Name:", methodName, key)
+		var assoc = findAssociationByAsName(key, modelType)
+		var json = idToJson[modelType][model.id]
+		if(isPlural(assoc)) {
+			//console.log("Assoc Method Name " + methodName + " on a " + modelType + " is a plural")
+			//console.log("Great SCOTT!", json[key])
+			var arr = json[key]
+			var newArr = []
+			if(!arr || (arr.length <= 0)) {
 				return null
 			}
-			return model[methodName](target, {transaction: transaction})
+			arr.forEach(function(entry) {
+				if(isAClientId(entry)) {
+					entry = clientIdToServerModel[assoc.target.name][index].id
+					console.log(assoc.target.name, index, entry)
+				}
+				newArr.push(entry)
+			})
+			return model[methodName](newArr, {transaction: transaction})
+		} else {
+			//console.log("Assoc Method Name " + methodName + " on a " + modelType + " is a singular")
+			var index = json[key]
+			if(!index) {return null}
+			if(isAClientId(index)) {
+				index = clientIdToServerModel[assoc.target.name][index].id
+				console.log(assoc.target.name, index)
+			}
+			return model[methodName](index, {transaction: transaction})
 		}
-		return null
+	
 	})
 }
 
