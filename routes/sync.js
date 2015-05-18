@@ -349,7 +349,7 @@ var filteredIdMap = function(json) {
 	Object.keys(json).forEach(function(modelName) {
 		map[modelName] = {}
 		Object.keys(json[modelName]).forEach(function(mid) {
-			map[modelName][mid] = json[modelName][mid].id
+			map[modelName][mid] = json[modelName][mid].id.toString()
 		})
 	})
 	return map
