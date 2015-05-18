@@ -225,7 +225,7 @@ var processNewAndModifiedObjects = function(json) {
 			})
 		}).then( function(s) {
 			//Suck-cess.  Commit & return the mapping of old clientIds to newly assigned server Ids
-			return transaction.rollback().then(function() {
+			return transaction.commit().then(function() {
 				console.log(filteredIdMap(clientIdToServerModel))
 				return filteredIdMap(clientIdToServerModel)
 			})
