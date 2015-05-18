@@ -2,7 +2,7 @@
 Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
-  var FreeTextCrew = sequelize.define("FreeTextCrew", {
+  var AgencyFreetextCrew = sequelize.define("AgencyFreetextCrew", {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -23,7 +23,7 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       apiSetup: apiSetup,
       associate: function(models) {
-        this.belongsToMany(models.Activity, {through: "Activity2FreeTextCrew"});
+        this.belongsToMany(models.PatrolLog, {through: "AgencyFreetextCrew2PatrolLog"});
       }
     },
     instanceMethods: {
@@ -33,13 +33,13 @@ module.exports = function(sequelize, DataTypes) {
     paranoid: true,
     timestamps: true
   });
-  return FreeTextCrew;
+  return AgencyFreetextCrew;
 };
 
 function apiSetup() {
   return( {
     configHash: {
-      endpoints: ['/freetextcrew', '/freetextcrew/:id'],
+      endpoints: ['/agencyfreetextcrew', '/agencyfreetextcrew/:id'],
       actions: ['list']
     },
     customizationFunction: function(freeTextCrew) {
