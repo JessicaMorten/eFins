@@ -324,8 +324,8 @@ var setAssociations = function(model, modelType, clientIdToServerModel, idToJson
 			}
 			arr.forEach(function(entry) {
 				if(isAClientId(entry)) {
-					entry = clientIdToServerModel[assoc.target.name][index].id
-					console.log(assoc.target.name, index, entry)
+					entry = clientIdToServerModel[assoc.target.name][entry].id
+					//console.log(assoc.target.name, entry)
 				}
 				newArr.push(entry)
 			})
