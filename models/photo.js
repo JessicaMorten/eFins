@@ -34,11 +34,11 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     instanceMethods: {
-      toJSON: function() {
-        var hash = this.get()
-        hash.lowResolution = this.lowResolution.toString()
-        return hash
-      }
+      // toJSON: function() {
+      //   var hash = this.get()
+      //   hash.lowResolution = this.lowResolution.toString()
+      //   return hash
+      // }
       
     }
   }, {
