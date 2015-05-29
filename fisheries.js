@@ -1,0 +1,20 @@
+module.exports = [
+  "Aquaria",
+  "Coastal Pelagics",
+  "Coastal Pelagics (Squid)",
+  "Crab",
+  "Groundfish",
+  "Halibut",
+  "Near Shore",
+  "Pacific Halibut",
+  "Research",
+  "Rock Fish",
+  "Sea Cucumber",
+  "Sea Urchin",
+  "Shrimp",
+  "Spiny Lobster",
+  "Stk Gear",
+  "Swordfish",
+  "Unspecified", 
+  "White Sea Bass"
+];
