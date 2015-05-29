@@ -6,7 +6,7 @@ module.exports = function(sequelize, DataTypes) {
     usn: {
       type: DataTypes.INTEGER,
       //allowNull: false,
-      unique: true//,
+      // unique: true//,
       // validate: {
       //   notEmpty: true
       // }
