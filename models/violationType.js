@@ -5,18 +5,18 @@ module.exports = function(sequelize, DataTypes) {
   var ViolationType = sequelize.define("ViolationType", {
     name: {
       type: DataTypes.STRING,
-      allowNull: false,
-      // unique: true,
-      validate: {
-        notEmpty: true
-      }
+      // allowNull: false,
+      // // unique: true,
+      // validate: {
+      //   notEmpty: true
+      // }
     },
     code: {
       type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: true
-      }
+      // allowNull: false,
+      // validate: {
+      //   notEmpty: true
+      // }
     },
     usn: {
       type: DataTypes.INTEGER,
