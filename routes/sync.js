@@ -185,7 +185,7 @@ var serializeRelations = function(json) {
 
 
 var processNewAndModifiedObjects = function(json) {
-
+		console.log('json', json)
     var clientIdToServerModel = {}
     var modelIdToIncomingJson = {}
     return Models.sequelize.transaction().then(function(transaction) {
@@ -196,17 +196,30 @@ var processNewAndModifiedObjects = function(json) {
 			var clientToServer = {}
 			var idToJson = {}
 			return Promise.map(objectList, function(obj) {
+				console.log('obj', obj)
 				var modified_obj = jsonNormalize(obj, key)
-				return modelClass
-						.findOrCreate({where: modified_obj}, {transaction: transaction})
-							.spread(function(model, created) {
-							//console.log(model, created)
-							if (obj.usn === -1) {
-								clientToServer[obj.id] = model
-							}
+				if (modified_obj.id) {
+					// update existing model
+					return modelClass.findOne({where: {id: modified_obj.id}}).then(function(model){
+						console.log('found model', typeof model)
+						return model.updateAttributes(modified_obj).then(function(){
+							console.log('updated')
 							idToJson[model.id] = obj
+							clientToServer[obj.id] = model
 							return model
-						})
+						});
+					});
+				} else {
+					return modelClass
+							.findOrCreate({where: modified_obj, transaction: transaction})
+								.spread(function(model, created) {
+								if (obj.usn === -1) {
+									clientToServer[obj.id] = model
+								}
+								idToJson[model.id] = obj
+								return model
+							})					
+				}
 			}).then(function(models) {
 				var indexedModels = {}
 				models.forEach(function(m) {
@@ -222,8 +235,9 @@ var processNewAndModifiedObjects = function(json) {
 		}).then( function() {
 			// Now, run through all the models and set associations.
 			return Promise.each(Object.keys(clientIdToServerModel), function(key) {
+				console.log('one', key)
 				return Promise.each(Object.keys(clientIdToServerModel[key]), function(mid) {
-					//console.log("By GEORGE!!!!!! " , modelIdToIncomingJson)
+					console.log("By GEORGE!!!!!! " , mid)
 					return setAssociations(clientIdToServerModel[key][mid], key, clientIdToServerModel, modelIdToIncomingJson, transaction)
 				})
 			})
@@ -294,11 +308,13 @@ var jsonNormalize = function(json, modelClass) {
 	newJson.updatedAt = new Date(json.updatedAt)
 	if(isAClientId(json.id)) {
 		delete newJson.id
-	} 
+	} else {
+		newJson.id = parseInt(json.id)
+	}
 	Object.keys(json).forEach(function(key) {
 		//console.log("Inspecting " + key + " " + json[key])
 		if(assocProperties.indexOf(key) != -1) {
-			//console.log("Found & deleting " + key + " " + json[key])
+			console.log("Found & deleting " + key + " " + json[key])
 			delete newJson[key]
 		}
 	})

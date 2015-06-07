@@ -3,20 +3,17 @@ Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var Photo = sequelize.define("Photo", {
-    originalUrl: {
+    s3key: {
       type: DataTypes.STRING
     },
-    latitude: {
-      type: DataTypes.FLOAT
+    bucket: {
+      type: DataTypes.STRING
     },
-    longitude: {
-      type: DataTypes.FLOAT
+    uploaded: {
+      type: DataTypes.BOOLEAN
     },
-    lowResolution: {
-      type: DataTypes.BLOB
-    },
-    originalBlob: {
-      type: DataTypes.BLOB
+    uploadedThumbnail: {
+      type: DataTypes.BOOLEAN
     },
     usn: {
       type: DataTypes.INTEGER,
