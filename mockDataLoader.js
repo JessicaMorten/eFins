@@ -34,19 +34,19 @@ Models.sequelize
 	  	})
 	  	.then(function() {
 		  return create_actions()
-		}).then(function(tmp_actions) {
-		  return create_agencies()
-		}).all().then(function(tmp_agencies) {
-			return create_agencyVessels(tmp_agencies)
-		}).then(function() {
-			return create_patrolLogs()
-		}).then(function() {
-			console.log("Settin' some associations")
-			trbuser.setAgency(nps)
-			return trbuser.save()
-		}).then(function() {
-			process.exit()
-		})
+			}).then(function(tmp_actions) {
+			  return create_agencies()
+			}).all().then(function(tmp_agencies) {
+				return create_agencyVessels(tmp_agencies)
+			}).then(function() {
+				return create_patrolLogs()
+			}).then(function() {
+				console.log("Settin' some associations")
+				trbuser.setAgency(nps)
+				return trbuser.save()
+			}).then(function() {
+				process.exit()
+			})
 	})
 
 
