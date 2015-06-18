@@ -197,16 +197,30 @@ var processNewAndModifiedObjects = function(json) {
 			var idToJson = {}
 			return Promise.map(objectList, function(obj) {
 				var modified_obj = jsonNormalize(obj, key)
-				return modelClass
-						.findOrCreate({where: modified_obj}, {transaction: transaction})
-							.spread(function(model, created) {
-							//console.log(model, created)
-							if (obj.usn === -1) {
-								clientToServer[obj.id] = model
-							}
+				console.log(modified_obj);
+				if (modified_obj.id) {
+					// update existing model
+					return modelClass.findOne({where: {id: modified_obj.id}}).then(function(model){
+						console.log('found model', typeof model)
+						return model.updateAttributes(modified_obj).then(function(ret){
+							console.log('updated', ret, model)
 							idToJson[model.id] = obj
+							// clientToServer[obj.id] = model
 							return model
-						})
+						});
+					});
+				} else {
+					return modelClass
+							.findOrCreate({where: modified_obj}, {transaction: transaction})
+								.spread(function(model, created) {
+								//console.log(model, created)
+								if (obj.usn === -1) {
+									clientToServer[obj.id] = model
+								}
+								idToJson[model.id] = obj
+								return model
+							})					
+				}
 			}).then(function(models) {
 				var indexedModels = {}
 				models.forEach(function(m) {
