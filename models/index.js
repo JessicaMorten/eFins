@@ -26,10 +26,10 @@ Promise.promisifyAll(fs)
 var _setupUsnHooks = function(modeldef) {
   return modeldef.describe()
   .then(function (descHash) {
-    if((! descHash.usn) && (modeldef.name != "Session")) {
+    if((! descHash.usn) && (modeldef.name != "Session") && (modeldef.name != "FullSyncBeforeDate")) {
       throw new Error("Model definition for " + modeldef.name + " does not contain a USN property.  Define one." + JSON.stringify(descHash, null, 4))
     }
-    if (modeldef.name === "Session") {
+    if (modeldef.name === "Session" || modeldef.name === "FullSyncBeforeDate") {
       return false
     } else {
       return true

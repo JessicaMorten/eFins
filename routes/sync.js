@@ -16,16 +16,24 @@ router.use( function(req, res, next) {
     next()
 });
 
-
+router.get('/state', function(req, res, next) {
+	usnGenerator.currentHighest().then(function(highestUsn){
+		Models.FullSyncBeforeDate.getOrCreate().then(function(date){
+			res.status(200).json({
+				updateCount: highestUsn,
+				fullSyncBefore: date
+			});
+		});
+	}).catch( function(e) {
+		return res.json500(e)
+	})
+});
 
 router.get('/sync', passport.authenticate('token', { session: false }), function(req, res, next) {
 	// TODO validate each of these params
 	//TODO filter secret attributes out of models
 	if(! req.query.afterUsn ) {
 		return res.json403("afterUsn required")
-	}
-	if(! req.query.endOfLastSync ) {
-		return res.json403("endOfLastSync required")
 	}
 	// if(! req.query.maxCount ) {
 	// 	return res.json403("maxCount required")
@@ -34,8 +42,6 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 	var highestUsn = -1
 	var afterUsn = parseInt(req.query.afterUsn)
 	usnGenerator.currentHighest().then(function(currentHighestUsn) {
-		console.log(currentHighestUsn);
-		console.log(typeof currentHighestUsn);
 		if(currentHighestUsn <= afterUsn) {
 			console.log("No new data to send to client")
 			return res.status(204).end()
@@ -77,9 +83,7 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 						})
 					})
 				} else {
-					json.highestUsn = highestUsn;
-					console.log(highestUsn);
-					console.log(typeof highestUsn);
+					json.highestUsn = highestUsn
 					serializeRelations(json).then(function(newJson) {
 						return res.status(200).json(newJson);
 					})
@@ -185,7 +189,7 @@ var serializeRelations = function(json) {
 
 
 var processNewAndModifiedObjects = function(json) {
-		console.log('json', json)
+
     var clientIdToServerModel = {}
     var modelIdToIncomingJson = {}
     return Models.sequelize.transaction().then(function(transaction) {
@@ -196,30 +200,17 @@ var processNewAndModifiedObjects = function(json) {
 			var clientToServer = {}
 			var idToJson = {}
 			return Promise.map(objectList, function(obj) {
-				console.log('obj', obj)
 				var modified_obj = jsonNormalize(obj, key)
-				if (modified_obj.id) {
-					// update existing model
-					return modelClass.findOne({where: {id: modified_obj.id}}).then(function(model){
-						console.log('found model', typeof model)
-						return model.updateAttributes(modified_obj).then(function(){
-							console.log('updated')
+				return modelClass
+						.findOrCreate({where: modified_obj}, {transaction: transaction})
+							.spread(function(model, created) {
+							//console.log(model, created)
+							if (obj.usn === -1) {
+								clientToServer[obj.id] = model
+							}
 							idToJson[model.id] = obj
-							clientToServer[obj.id] = model
 							return model
-						});
-					});
-				} else {
-					return modelClass
-							.findOrCreate({where: modified_obj, transaction: transaction})
-								.spread(function(model, created) {
-								if (obj.usn === -1) {
-									clientToServer[obj.id] = model
-								}
-								idToJson[model.id] = obj
-								return model
-							})					
-				}
+						})
 			}).then(function(models) {
 				var indexedModels = {}
 				models.forEach(function(m) {
@@ -235,9 +226,8 @@ var processNewAndModifiedObjects = function(json) {
 		}).then( function() {
 			// Now, run through all the models and set associations.
 			return Promise.each(Object.keys(clientIdToServerModel), function(key) {
-				console.log('one', key)
 				return Promise.each(Object.keys(clientIdToServerModel[key]), function(mid) {
-					console.log("By GEORGE!!!!!! " , mid)
+					//console.log("By GEORGE!!!!!! " , modelIdToIncomingJson)
 					return setAssociations(clientIdToServerModel[key][mid], key, clientIdToServerModel, modelIdToIncomingJson, transaction)
 				})
 			})
@@ -308,13 +298,11 @@ var jsonNormalize = function(json, modelClass) {
 	newJson.updatedAt = new Date(json.updatedAt)
 	if(isAClientId(json.id)) {
 		delete newJson.id
-	} else {
-		newJson.id = parseInt(json.id)
-	}
+	} 
 	Object.keys(json).forEach(function(key) {
 		//console.log("Inspecting " + key + " " + json[key])
 		if(assocProperties.indexOf(key) != -1) {
-			console.log("Found & deleting " + key + " " + json[key])
+			//console.log("Found & deleting " + key + " " + json[key])
 			delete newJson[key]
 		}
 	})

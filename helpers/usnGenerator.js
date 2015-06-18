@@ -2,15 +2,12 @@ var sequelize = null;
 var Sequelize = require('sequelize')
 var Promise = require('bluebird')
 
-
 var initialize = function(passed_sequelize) {
 	sequelize = passed_sequelize;
 	return sequelize.query("CREATE SEQUENCE usnGenerator", { type: Sequelize.QueryTypes.CREATE}).catch(function(e) {
 		if(_isntAlreadyPresentError(e)) {
 			throw e
-		} //else {
-			//console.log("usnGenerator sequence already present in database")
-		//}
+		}
 	});
 }
 
@@ -18,7 +15,7 @@ var currentHighest = function () {
 	if(! sequelize ) {
 		throw new Error("UsnGenerator currentHighest() called before initialization")
 	}
-	return sequelize.query("SELECT * FROM usnGenerator").spread( function(results, metadata) {
+	return sequelize.query("SELECT last_value from usnGenerator").spread( function(results, metadata) {
 		return(parseInt(results[0]['last_value']));
 	});
 }
