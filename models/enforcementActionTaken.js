@@ -3,6 +3,11 @@ Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var EnforcementActionTaken = sequelize.define("EnforcementActionTaken", {
+    id: {
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4
+    },
     usn: {
       type: DataTypes.INTEGER,
       //allowNull: false,

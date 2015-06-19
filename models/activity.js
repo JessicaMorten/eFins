@@ -3,6 +3,11 @@ Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var Activity = sequelize.define("Activity", {
+    id: {
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4
+    },
     type: {
       type:   DataTypes.ENUM,
       values: ['cdfwCommercialBoardingCard', 'cdfwRecreationalBoardingCard', 'npsContactCard', 'activityLog']

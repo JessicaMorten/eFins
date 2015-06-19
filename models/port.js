@@ -3,6 +3,11 @@ Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var Port = sequelize.define("Port", {
+    id: {
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,

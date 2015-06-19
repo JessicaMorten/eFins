@@ -3,6 +3,11 @@ Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var PatrolLog = sequelize.define("PatrolLog", {
+    id: {
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4
+    },
     date: {
       type: DataTypes.DATE,
       allowNull: false,

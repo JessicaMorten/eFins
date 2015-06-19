@@ -2,6 +2,11 @@
 Promise = require('bluebird')
 module.exports = function(sequelize, DataTypes) {
   var ContactType = sequelize.define("ContactType", {
+    id: {
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4
+    },
     name: {
       type: DataTypes.STRING
     },

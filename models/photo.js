@@ -3,8 +3,10 @@ Promise = require('bluebird')
 
 module.exports = function(sequelize, DataTypes) {
   var Photo = sequelize.define("Photo", {
-    s3key: {
-      type: DataTypes.STRING
+    id: {
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4
     },
     bucket: {
       type: DataTypes.STRING

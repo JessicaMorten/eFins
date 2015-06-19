@@ -10,6 +10,11 @@ var randomToken = function() {
 
 module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define("User", {
+    id: {
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4
+    },
     usn: {
       type: DataTypes.INTEGER,
       //allowNull: false,
