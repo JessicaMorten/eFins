@@ -30,15 +30,27 @@ Promise.onPossiblyUnhandledRejection(function(error){
   throw error
 });
 
+
+
 var Models = require('./models');
-Models.init()
+
+Models.sequelize
+.query("drop schema public cascade")
 .then(function() {
-  Models.initializeUsnGenerator()
-  Models.sequelize.sync({force: true})
-    .done(function() {
+  return Models.sequelize.query("create schema public")
+})
+.then(function() {
+  return Models.sequelize.sync({force: true})
+})
+.then(function() {
+  Models.init().then(function() {
+      Models.initializeUsnGenerator()
+  }).then(function(){
+    setTimeout(function(){
       process.chdir(__dirname);
       reporter.run(files, opts, function() {
         Models.sequelize.close();
       });
-    })
-})
+    }, 2000);
+  })
+});
