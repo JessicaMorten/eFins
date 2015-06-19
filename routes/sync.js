@@ -205,7 +205,7 @@ var processNewAndModifiedObjects = function(json) {
 						return model.updateAttributes(modified_obj).then(function(ret){
 							console.log('updated', ret, model)
 							idToJson[model.id] = obj
-							// clientToServer[obj.id] = model
+							clientToServer[obj.id] = model
 							return model
 						});
 					});
