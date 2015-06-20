@@ -7,6 +7,10 @@ var cheerio = require('cheerio');
 var Models = require('../models');
 var User = Models.User;
 
+var helpers = require('./helpers').helpers(null);
+var createUser = helpers.createUser;
+var authorize = helpers.authorize;
+
 function inbox(test, next) {
   mailClient.getLatest(function(err, email) {
     test.ifError(err);
@@ -19,22 +23,6 @@ function inbox(test, next) {
 function userIsAllowed(email, next) {
   User.find({where: {email: email}}).done(function(err, user) {
     next(user.isAllowed());
-  });
-}
-
-function createUser(opts, next) {
-  var password = opts.password;
-  delete opts.password;
-  var user = User.build(opts);
-  user.setPassword(password, function(err){
-    /* istanbul ignore if */
-    if (err) {
-      next(err)
-    } else {
-      user.save().done(function(err) {
-        next(err, user);
-      })      
-    }
   });
 }
 
@@ -349,46 +337,6 @@ exports.getToken = {
       });
     });  
   }
-}
-
-function authorize(opts, next) {
-  createUser(opts, function(err, user) {
-    /* istanbul ignore if */
-    if (err) {
-      next(err);
-    } else {
-      user.save().done(function(err) {
-        /* istanbul ignore if */
-        if (err) {
-          next(err);
-        } else {
-          var form = {
-            form: {
-              email: "test@example.com",
-              password: "password"
-            }
-          };
-          request.post(absUrl("/auth/getToken"), form, function(err, res) {
-            /* istanbul ignore if */
-            if (err) {
-              next(err);
-            } else {
-              /* istanbul ignore if */
-              if (res.statusCode !== 200) {
-                next(new Error("Could not get token"));
-              } else {
-                next(null, user, request.defaults({
-                  headers: {
-                    Authorization: res.headers.authorization
-                  }
-                }));
-              }
-            }
-          });          
-        }
-      });
-    }
-  });
 }
 
 exports.expireToken = {
