@@ -3,7 +3,7 @@
     "name": "eFins-dev",
     "script": "bin/eFins",
     "instances": 4,
-    "watch": ["models", "routes", "views", "app.js", "email.js", "absoluteUrl.js"],
+    "watch": ["models", "routes", "views", "app.js", "email.js", "absoluteUrl.js", "helpers"],
     "env": {
       "NODE_ENV": "development",
       "PORT": 3002,

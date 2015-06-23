@@ -59,13 +59,19 @@ function authorize(opts, next) {
   });
 }
 
+function createActivityTestFixture() {
+  // creates an activity (cdfwCommercialBoardingCard) 
+  // with all possible associations set for test purposes
+}
+
 
 module.exports = {
   helpers: function(test) {
     if (test && test.done) { test.done() };
     return {
       authorize: authorize,
-      createUser: createUser
+      createUser: createUser,
+      createActivityTestFixture: createActivityTestFixture
     }
   }
 }
