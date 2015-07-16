@@ -34,8 +34,8 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 	var highestUsn = -1
 	var afterUsn = parseInt(req.query.afterUsn)
 	usnGenerator.currentHighest().then(function(currentHighestUsn) {
-		console.log(currentHighestUsn);
-		console.log(typeof currentHighestUsn);
+		//console.log(currentHighestUsn);
+		//console.log(typeof currentHighestUsn);
 		if(currentHighestUsn <= afterUsn) {
 			console.log("No new data to send to client")
 			return res.status(204).end()
@@ -78,8 +78,8 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 					})
 				} else {
 					json.highestUsn = highestUsn;
-					console.log(highestUsn);
-					console.log(typeof highestUsn);
+					//console.log(highestUsn);
+					//console.log(typeof highestUsn);
 					serializeRelations(json).then(function(newJson) {
 						return res.status(200).json(newJson);
 					})
@@ -185,7 +185,7 @@ var serializeRelations = function(json) {
 
 
 var processNewAndModifiedObjects = function(json) {
-
+		console.log('json', json)
     var clientIdToServerModel = {}
     var modelIdToIncomingJson = {}
     return Models.sequelize.transaction().then(function(transaction) {
@@ -196,14 +196,16 @@ var processNewAndModifiedObjects = function(json) {
 			var clientToServer = {}
 			var idToJson = {}
 			return Promise.map(objectList, function(obj) {
+				console.log('obj', obj)
 				var modified_obj = jsonNormalize(obj, key)
-				console.log(modified_obj);
+
 				if (modified_obj.id) {
 					// update existing model
 					return modelClass.findOne({where: {id: modified_obj.id}}).then(function(model){
 						console.log('found model', typeof model)
 						return model.updateAttributes(modified_obj).then(function(ret){
 							console.log('updated', ret, model)
+
 							idToJson[model.id] = obj
 							clientToServer[obj.id] = model
 							return model
@@ -211,6 +213,7 @@ var processNewAndModifiedObjects = function(json) {
 					});
 				} else {
 					return modelClass
+
 							.findOrCreate({where: modified_obj}, {transaction: transaction})
 								.spread(function(model, created) {
 								//console.log(model, created)
@@ -236,8 +239,9 @@ var processNewAndModifiedObjects = function(json) {
 		}).then( function() {
 			// Now, run through all the models and set associations.
 			return Promise.each(Object.keys(clientIdToServerModel), function(key) {
+				console.log('one', key)
 				return Promise.each(Object.keys(clientIdToServerModel[key]), function(mid) {
-					//console.log("By GEORGE!!!!!! " , modelIdToIncomingJson)
+					console.log("By GEORGE!!!!!! " , mid)
 					return setAssociations(clientIdToServerModel[key][mid], key, clientIdToServerModel, modelIdToIncomingJson, transaction)
 				})
 			})
@@ -308,11 +312,13 @@ var jsonNormalize = function(json, modelClass) {
 	newJson.updatedAt = new Date(json.updatedAt)
 	if(isAClientId(json.id)) {
 		delete newJson.id
-	} 
+	} else {
+		newJson.id = parseInt(json.id)
+	}
 	Object.keys(json).forEach(function(key) {
 		//console.log("Inspecting " + key + " " + json[key])
 		if(assocProperties.indexOf(key) != -1) {
-			//console.log("Found & deleting " + key + " " + json[key])
+			console.log("Found & deleting " + key + " " + json[key])
 			delete newJson[key]
 		}
 	})
