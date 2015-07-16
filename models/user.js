@@ -150,9 +150,9 @@ module.exports = function(sequelize, DataTypes) {
         delete json.approved
         return json
       }
-    }
-  }, {
-    paranoid: true
+    },
+    paranoid: true,
+    timestamps: true
   });
   return User;
 };

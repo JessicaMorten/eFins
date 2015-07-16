@@ -37,8 +37,7 @@ module.exports = function(sequelize, DataTypes) {
       //   return hash
       // }
       
-    }
-  }, {
+    },
     paranoid: true,
     timestamps: true
   });

@@ -35,8 +35,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     instanceMethods: {
       
-    }
-  }, {
+    },
     paranoid: true,
     timestamps: true
   });
