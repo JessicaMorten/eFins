@@ -34,8 +34,8 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 	var highestUsn = -1
 	var afterUsn = parseInt(req.query.afterUsn)
 	usnGenerator.currentHighest().then(function(currentHighestUsn) {
-		console.log(currentHighestUsn);
-		console.log(typeof currentHighestUsn);
+		//console.log(currentHighestUsn);
+		//console.log(typeof currentHighestUsn);
 		if(currentHighestUsn <= afterUsn) {
 			console.log("No new data to send to client")
 			return res.status(204).end()
@@ -78,8 +78,8 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 					})
 				} else {
 					json.highestUsn = highestUsn;
-					console.log(highestUsn);
-					console.log(typeof highestUsn);
+					//console.log(highestUsn);
+					//console.log(typeof highestUsn);
 					serializeRelations(json).then(function(newJson) {
 						return res.status(200).json(newJson);
 					})
