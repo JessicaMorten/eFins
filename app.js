@@ -86,6 +86,9 @@ Models.init().then(function() {
   var auth = require('./routes/auth');
   var sync = require('./routes/sync');   
   app.use('/auth', auth)
+  app.use('/ping', function(req, res) {
+    res.send("OK")
+  })
   app.use(passport.authorize('token', {session: false}));
   app.use('/', routes);
   app.use('/api/1', sync)
