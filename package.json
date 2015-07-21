@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "devserver": "node_modules/pm2/bin/pm2 start ./app-dev.json",
-    "start": "node_modules/pm2/bin/pm2 start bin/eFins -i 4",
+    "devserver": "node_modules/pm2/bin/pm2 start ./app-dev.json --log-date-format \"YYYY-MM-DD HH:mm Z\"",
+    "start": "node_modules/pm2/bin/pm2 start bin/eFins -i 4 --log-date-format \"YYYY-MM-DD HH:mm Z\"",
     "stop": "node_modules/pm2/bin/pm2 stop -s eFins; node_modules/pm2/bin/pm2 stop -s eFins-dev; node_modules/pm2/bin/pm2 stop -s test-eFins; echo \"Stopped\";",
     "reload": "node_modules/pm2/bin/pm2 gracefulReload bin/eFins",
     "monitor": "node_modules/pm2/bin/pm2 monitor",

@@ -16,6 +16,12 @@ if (process.env.NODE_ENV === 'test') {
     im.hookLoader(__dirname);
 }
 
+console.log = function() {
+  var util = require('util')
+  var str =  new Date().toUTCString()
+  process.stdout.write(str + ' ' + util.format.apply(this, arguments) + '\n')
+}
+
 var Models = require('./models');
 
 var absUrl = require('./absoluteUrl.js');
@@ -70,7 +76,7 @@ Models.init().then(function() {
 
   // uncomment after placing your favicon in /public
   //app.use(favicon(__dirname + '/public/favicon.ico'));
-  app.use(logger('dev'));
+  app.use(logger(':date[clf] :remote-addr - :remote-user  ":method :url HTTP/:http-version" :status :res[content-length]'));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cookieParser());
