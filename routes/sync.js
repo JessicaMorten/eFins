@@ -199,11 +199,10 @@ var processNewAndModifiedObjects = function(json) {
 				console.log('obj', obj)
 				var modified_obj = jsonNormalize(obj, key)
 
-				if (modified_obj.id) {
+				if ("id" in modified_obj) {
 					// update existing model
 					return modelClass.findOne({where: {id: modified_obj.id}}).then(function(model){
-						console.log('found model', typeof model)
-						return model.updateAttributes(modified_obj).then(function(ret){
+						return model.updateAttributes(modified_obj, {transaction: transaction}).then(function(ret){
 							console.log('updated', ret, model)
 
 							idToJson[model.id] = obj
@@ -311,8 +310,10 @@ var jsonNormalize = function(json, modelClass) {
 	newJson.createdAt = new Date(json.createdAt)
 	newJson.updatedAt = new Date(json.updatedAt)
 	if(isAClientId(json.id)) {
+		console.log("Deleting client id ", json.id)
 		delete newJson.id
 	} else {
+		console.log(json.id, " is not a client id")
 		newJson.id = parseInt(json.id)
 	}
 	Object.keys(json).forEach(function(key) {
