@@ -72,6 +72,7 @@ module.exports = function(sequelize, DataTypes) {
         // associations can be defined here
         models.User.belongsToMany(models.Activity, {through: "Activity2User"});
         models.User.hasMany(models.PatrolLog);
+        models.User.belongsToMany(models.PatrolLog, {as: "patrolLogs", through: "PatrolLog2User"});
         models.User.belongsTo(models.Agency);
       },
       register: function(opts, next) {
