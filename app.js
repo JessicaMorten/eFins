@@ -82,7 +82,7 @@ Models.init().then(function() {
   app.use(cookieParser());
   app.use(express.static(path.join(__dirname, 'public')));
 
-  app.enable('trust proxy');
+  app.enable('trust proxy', 'loopback');
 
   if (process.env.NODE_ENV === 'test') {
       //enable coverage endpoints under /coverage
