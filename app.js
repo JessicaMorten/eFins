@@ -22,6 +22,22 @@ console.log = function() {
   process.stdout.write(str + ' ' + util.format.apply(this, arguments) + '\n')
 }
 
+logger.token('app_user', function(req, res) {
+  return req.headers['efins-user']
+})
+
+logger.token('device_name', function(req, res) {
+  return req.headers['device-name']
+})
+
+logger.token('device_id', function(req, res) {
+  return req.headers['device-id']
+})
+
+logger.token('app_version', function(req, res) {
+  return req.headers['user-agent'].split(/eFins\ /)[1]
+})
+
 var Models = require('./models');
 
 var absUrl = require('./absoluteUrl.js');
@@ -67,6 +83,9 @@ epilogue.initialize({
   updateMethod: 'PUT'
 })
 
+//var decompress = require('express-decompress').create()
+
+
 Models.init().then(function() {
   Models.createRestApis(epilogue)
   Models.initializeUsnGenerator()
@@ -76,11 +95,20 @@ Models.init().then(function() {
 
   // uncomment after placing your favicon in /public
   //app.use(favicon(__dirname + '/public/favicon.ico'));
-  app.use(logger(':date[clf] :remote-addr - :remote-user  ":method :url HTTP/:http-version" :status :res[content-length]'));
+  //When you just want to see what is in the headers, uncomment this and shout for joy
+  // app.use(function(req, res, next) {
+  //   console.log(req.headers)
+  //   next()
+  // })
+  
+  app.use(logger(':date[clf] :remote-addr ":method :url HTTP/:http-version" :status :res[content-length] :app_user [:device_name] [:device_id] :app_version'));
   app.use(bodyParser.json());
+  app.use(bodyParser.text());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cookieParser());
   app.use(express.static(path.join(__dirname, 'public')));
+  
+
 
   app.enable('trust proxy', 'loopback');
 
