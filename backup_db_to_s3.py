@@ -12,14 +12,17 @@ import datetime
 def cleanup():
   print("Cleaning up...")
   try:
-    call(['rm', tarfile_name])
+    print("Removing tarfile...")
+    os.remove(tarfile_name)
   except:
     print("No tarfile to remove")
 
   try:
-    call(['rm', '-rf', backup_path])
+    print("Removing raw dump...")
+    os.remove(backup_path)
   except:
     print("No raw backup to remove");
+  return
 
 bucket_name = 'efins-dbbackups'
 arn = "arn:aws:sns:us-west-2:196230260133:eFins_db_backup"
@@ -87,3 +90,5 @@ if bytes_written < 1:
 print("Uploaded.")
 cleanup()
 os.chdir(orig_dir)
+print("See ya.")
+exit(0)
