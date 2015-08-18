@@ -80,7 +80,7 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 					json.highestUsn = highestUsn;
 					//console.log(highestUsn);
 					//console.log(typeof highestUsn);
-					serializeRelations(json).then(function(newJson) {
+					serializeRelations(json, afterUsn).then(function(newJson) {
 						return res.status(200).json(newJson);
 					})
 				}
@@ -126,7 +126,7 @@ router.post('/sync', passport.authenticate('token', { session: false }), functio
 
 })
 
-var serializeRelations = function(json) {
+var serializeRelations = function(json, lowestUSN) {
 	json.relations = []
 	var queryPromises = []
 	var allModels = Models.sequelize.models
@@ -143,10 +143,21 @@ var serializeRelations = function(json) {
 				as = as.charAt(0).toLowerCase() + as.slice(1)
 			}
 			var rDescriptor = {type: body.associationType, sourceModel: body.source.name, targetModel: body.target.name, as: as}
+			//console.log(body)
 			if (body.associationType === 'BelongsToMany') {
 				var tableName = body.throughModel.options.through
 				rDescriptor.tableName = tableName
-				queryPromises.push( Models.sequelize.query("SELECT * FROM \"" + tableName + "\";", {type: Models.sequelize.QueryTypes.SELECT})
+				var subquery1 = " INNER JOIN \"" + body.source.tableName + "\" ON \"" + tableName + "\".\"" + body.foreignKey 
+								+ "\" = \"" + body.source.tableName + "\".id and \"" + body.source.tableName +  "\".\"deletedAt\" is NULL "
+				var subquery2 = " INNER JOIN \"" + body.target.tableName + "\" ON \"" + tableName + "\".\"" + body.otherKey
+								+ "\" = \"" + body.target.tableName + "\".id and \"" + body.target.tableName + "\".\"deletedAt\" is NULL "
+				var mainQuery = "SELECT \"" + tableName + "\".\"" + body.foreignKey + "\",\""
+								+ tableName + "\".\"" + body.otherKey + "\" FROM \"" + tableName + "\"" + subquery1 + subquery2 + " where (\"" + body.target.tableName + "\".usn > " + lowestUSN
+								+ " OR \"" + body.source.tableName + "\".usn > " + lowestUSN + ");"
+		
+
+				//console.log(mainQuery)
+				queryPromises.push( Models.sequelize.query(mainQuery, {type: Models.sequelize.QueryTypes.SELECT})
 						     .then(function(assocIds) {
 						     	assocIds.forEach(function(i) {
 						     		delete i.createdAt
@@ -161,7 +172,8 @@ var serializeRelations = function(json) {
 				//console.log(body)
 				var tableName = body.source.tableName
 				var foreignKeyId = body.options.foreignKey
-				var query = "SELECT id,\"" + foreignKeyId + "\" FROM \"" + tableName + "\";"
+				var query = "SELECT id,\"" + foreignKeyId + "\" FROM \"" + tableName + "\" WHERE \"deletedAt\" IS NULL AND \"" + foreignKeyId + "\" IS NOT NULL AND usn > " + lowestUSN + ";"
+				//console.log(query)
 				//console.log(query)
 				queryPromises.push(Models.sequelize.query(query, {type: Models.sequelize.QueryTypes.SELECT})
 						     .then(function(assocIds) {
@@ -171,6 +183,8 @@ var serializeRelations = function(json) {
 						     	rDescriptor.clientAssociationName = a.charAt(0).toLowerCase() + a.slice(1)
 						     	json.relations.push(rDescriptor)
 						     	return null
+						     }).error(function(e) {
+						     	console.log("FUCK YOU", e)
 						     })
 				)
 			}
