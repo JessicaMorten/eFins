@@ -72,7 +72,7 @@ router.get('/sync', passport.authenticate('token', { session: false }), function
 					usnGenerator.currentHighest().then(function(usn) {
 						console.log("Got highest usn", usn)
 						json.highestUsn = usn
-						serializeRelations(json).then(function(newJson) {
+						serializeRelations(json, 0).then(function(newJson) {
 							return res.status(200).json(newJson);
 						})
 					})
@@ -183,8 +183,6 @@ var serializeRelations = function(json, lowestUSN) {
 						     	rDescriptor.clientAssociationName = a.charAt(0).toLowerCase() + a.slice(1)
 						     	json.relations.push(rDescriptor)
 						     	return null
-						     }).error(function(e) {
-						     	console.log("FUCK YOU", e)
 						     })
 				)
 			}
