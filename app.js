@@ -35,7 +35,11 @@ logger.token('device_id', function(req, res) {
 })
 
 logger.token('app_version', function(req, res) {
-  return req.headers['user-agent'].split(/eFins\ /)[1]
+  if(req.headers['user-agent']) {
+  	return req.headers['user-agent'].split(/eFins\ /)[1]
+  } else {
+	return ""
+  }
 })
 
 var Models = require('./models');
